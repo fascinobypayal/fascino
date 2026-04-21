@@ -120,7 +120,7 @@ const ShopPage = () => {
       <PageHeader
         title="Shop"
         rightElement={
-          <button onClick={handleOpenFilters} className="relative p-2 text-foreground hover:text-accent transition-colors" aria-label="Toggle filters">
+          <button onClick={handleOpenFilters} className="relative p-2 text-foreground hover:text-accent transition-colors md:hidden" aria-label="Toggle filters">
             <SlidersHorizontal className="h-5 w-5" />
             {hasActiveFilters && (
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent" />
@@ -129,34 +129,22 @@ const ShopPage = () => {
         }
       />
 
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <div className="sticky top-14 z-30 bg-background border-b border-border">
-          <TabsList className="w-full rounded-none bg-transparent h-auto p-0">
-            <TabsTrigger
-              value="products"
-              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 text-xs uppercase tracking-widest"
-            >
-              Products
-            </TabsTrigger>
-            <TabsTrigger
-              value="collections"
-              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 text-xs uppercase tracking-widest"
-            >
-              Collections
-            </TabsTrigger>
-          </TabsList>
-        </div>
+      <div className="md:flex md:gap-0 md:max-w-7xl md:mx-auto">
+        {/* Desktop Filter Sidebar */}
+        <aside className="hidden md:block w-64 flex-shrink-0 border-r border-border min-h-screen pt-8 px-6">
+          <h3 className="text-[11px] uppercase tracking-widest mb-6">Filter &amp; Sort</h3>
 
-        <TabsContent value="products">
+          {/* Categories */}
           {categories.length > 0 && (
-            <div className="bg-background border-b border-border">
-              <div className="flex gap-2 px-4 py-3 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+            <div className="mb-8">
+              <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3">Category</h4>
+              <div className="space-y-1">
                 <button
                   onClick={() => setCategory(null)}
-                  className={`flex-shrink-0 px-5 py-2.5 text-xs uppercase tracking-wider rounded-full transition-all duration-200 ${
+                  className={`block w-full text-left px-2 py-1.5 text-xs uppercase tracking-wider transition-colors duration-200 ${
                     !activeCategory
-                      ? 'bg-accent/15 text-accent border border-accent/30'
-                      : 'bg-transparent border border-border text-muted-foreground hover:border-foreground/40'
+                      ? 'text-accent font-medium'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   All
@@ -165,10 +153,10 @@ const ShopPage = () => {
                   <button
                     key={cat}
                     onClick={() => setCategory(cat)}
-                    className={`flex-shrink-0 px-5 py-2.5 text-xs uppercase tracking-wider rounded-full transition-all duration-200 ${
+                    className={`block w-full text-left px-2 py-1.5 text-xs uppercase tracking-wider transition-colors duration-200 ${
                       activeCategory === cat
-                        ? 'bg-accent/15 text-accent border border-accent/30'
-                        : 'bg-transparent border border-border text-muted-foreground hover:border-foreground/40'
+                        ? 'text-accent font-medium'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     {cat}
@@ -178,41 +166,145 @@ const ShopPage = () => {
             </div>
           )}
 
-          <div className="px-4 py-6 pb-8">
-            {productsLoading ? (
-              <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-            ) : filteredProducts.length === 0 ? (
-              <div className="text-center py-16">
-                <p className="text-sm text-muted-foreground">No products found</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4 stagger-children">
-                {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            )}
+          {/* Price Ranges */}
+          <div className="mb-8">
+            <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3">Price</h4>
+            <div className="space-y-1">
+              {priceRanges.map((range) => (
+                <button
+                  key={range.key}
+                  onClick={() => setActivePriceRange(activePriceRange === range.key ? null : range.key)}
+                  className={`block w-full text-left px-2 py-1.5 text-xs uppercase tracking-wider transition-colors duration-200 ${
+                    activePriceRange === range.key
+                      ? 'text-accent font-medium'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {range.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </TabsContent>
 
-        <TabsContent value="collections">
-          <div className="px-4 py-6 pb-8">
-            {collectionsLoading ? (
-              <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-            ) : collections.length === 0 ? (
-              <div className="text-center py-16">
-                <p className="text-sm text-muted-foreground">No collections found</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3 stagger-children">
-                {collections.map((collection) => (
-                  <CollectionCard key={collection.id} collection={collection} />
-                ))}
-              </div>
-            )}
+          {/* Sort */}
+          <div className="mb-8">
+            <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3">Sort By</h4>
+            <div className="space-y-1">
+              {sortOptions.map((sort) => (
+                <button
+                  key={sort.key}
+                  onClick={() => setActiveSort(activeSort === sort.key ? null : sort.key)}
+                  className={`block w-full text-left px-2 py-1.5 text-xs uppercase tracking-wider transition-colors duration-200 ${
+                    activeSort === sort.key
+                      ? 'text-accent font-medium'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {sort.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </TabsContent>
-      </Tabs>
+
+          {/* Clear filters */}
+          {hasActiveFilters && (
+            <button
+              onClick={() => { setActivePriceRange(null); setActiveSort(null); }}
+              className="text-[10px] uppercase tracking-widest text-accent hover:text-accent/80 transition-colors duration-200"
+            >
+              Clear Filters
+            </button>
+          )}
+        </aside>
+
+        {/* Main content */}
+        <div className="flex-1 md:pt-8 md:px-8">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+            <div className="sticky top-14 md:top-24 z-30 bg-background border-b border-border">
+              <TabsList className="w-full rounded-none bg-transparent h-auto p-0">
+                <TabsTrigger
+                  value="products"
+                  className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 text-xs uppercase tracking-widest"
+                >
+                  Products
+                </TabsTrigger>
+                <TabsTrigger
+                  value="collections"
+                  className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 text-xs uppercase tracking-widest"
+                >
+                  Collections
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="products">
+              {categories.length > 0 && (
+                <div className="bg-background border-b border-border md:hidden">
+                  <div className="flex gap-2 px-4 py-3 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+                    <button
+                      onClick={() => setCategory(null)}
+                      className={`flex-shrink-0 px-5 py-2.5 text-xs uppercase tracking-wider rounded-full transition-all duration-200 ${
+                        !activeCategory
+                          ? 'bg-accent/15 text-accent border border-accent/30'
+                          : 'bg-transparent border border-border text-muted-foreground hover:border-foreground/40'
+                      }`}
+                    >
+                      All
+                    </button>
+                    {categories.map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setCategory(cat)}
+                        className={`flex-shrink-0 px-5 py-2.5 text-xs uppercase tracking-wider rounded-full transition-all duration-200 ${
+                          activeCategory === cat
+                            ? 'bg-accent/15 text-accent border border-accent/30'
+                            : 'bg-transparent border border-border text-muted-foreground hover:border-foreground/40'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="px-4 py-6 pb-8">
+                {productsLoading ? (
+                  <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+                ) : filteredProducts.length === 0 ? (
+                  <div className="text-center py-16">
+                    <p className="text-sm text-muted-foreground">No products found</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 md:gap-6 stagger-children">
+                    {filteredProducts.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="collections">
+              <div className="px-4 py-6 pb-8">
+                {collectionsLoading ? (
+                  <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+                ) : collections.length === 0 ? (
+                  <div className="text-center py-16">
+                    <p className="text-sm text-muted-foreground">No collections found</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 md:gap-6 stagger-children">
+                    {collections.map((collection) => (
+                      <CollectionCard key={collection.id} collection={collection} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
 
       {/* Filters Sheet */}
       <Sheet open={showFilters} onOpenChange={(open) => !open && handleCloseFilters()}>

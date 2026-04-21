@@ -301,140 +301,178 @@ const CartPage = () => {
     <div className="min-h-screen pb-20">
       <PageHeader title="Cart" />
 
-      <div className="px-4 py-2">
-        <p className="text-xs text-muted-foreground">
-          {itemCount} {itemCount === 1 ? 'item' : 'items'}
-        </p>
-      </div>
+      <div className="md:max-w-5xl md:mx-auto md:px-8 md:py-10 md:flex md:gap-10 md:items-start">
+        {/* Left: Cart items + coupon */}
+        <div className="flex-1">
+          <div className="px-4 py-2 md:px-0 md:py-0 md:mb-4">
+            <p className="text-xs text-muted-foreground">
+              {itemCount} {itemCount === 1 ? 'item' : 'items'}
+            </p>
+          </div>
 
-      {/* Cart Items */}
-      <div className="px-4">
-        {items.map((item) => (
-          <div key={item.id} className="flex gap-4 py-4 border-b border-border animate-fade-in">
-            <div className="w-24 h-32 bg-primary overflow-hidden flex-shrink-0">
-              {item.product_image ? (
-                <img src={item.product_image} alt={item.product_name} className="h-full w-full object-cover" />
-              ) : (
-                <div className="h-full w-full flex items-center justify-center text-muted-foreground text-xs">No image</div>
-              )}
-            </div>
-            <div className="flex-1 flex flex-col justify-between">
-              <div>
-                <div className="flex justify-between items-start">
-                  <h3 className="font-medium text-sm text-foreground pr-2">{item.product_name}</h3>
-                  <button onClick={() => removeItem(item.id)} className="p-1 text-muted-foreground hover:text-foreground transition-colors" aria-label="Remove item">
-                    <X className="h-4 w-4" />
-                  </button>
+          {/* Cart Items */}
+          <div className="px-4 md:px-0">
+            {items.map((item) => (
+              <div key={item.id} className="flex gap-4 py-4 border-b border-border animate-fade-in">
+                <div className="w-24 h-32 bg-primary overflow-hidden flex-shrink-0">
+                  {item.product_image ? (
+                    <img src={item.product_image} alt={item.product_name} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-muted-foreground text-xs">No image</div>
+                  )}
                 </div>
-                {item.customizations.length > 0 && (
-                  <div className="mt-1 space-y-0.5">
-                    {item.customizations.map(c => (
-                      <p key={c.id} className="text-xs text-muted-foreground">
-                        {c.customization_name}
-                        {c.customization_price > 0 && ` (+${formatPrice(c.customization_price)})`}
-                      </p>
-                    ))}
+                <div className="flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-medium text-sm text-foreground pr-2">{item.product_name}</h3>
+                      <button onClick={() => removeItem(item.id)} className="p-1 text-muted-foreground hover:text-foreground transition-colors" aria-label="Remove item">
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                    {item.customizations.length > 0 && (
+                      <div className="mt-1 space-y-0.5">
+                        {item.customizations.map(c => (
+                          <p key={c.id} className="text-xs text-muted-foreground">
+                            {c.customization_name}
+                            {c.customization_price > 0 && ` (+${formatPrice(c.customization_price)})`}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    {item.customization_signature && !item.customizations.length && (
+                      <p className="text-xs text-muted-foreground mt-1">{item.customization_signature}</p>
+                    )}
                   </div>
-                )}
-                {item.customization_signature && !item.customizations.length && (
-                  <p className="text-xs text-muted-foreground mt-1">{item.customization_signature}</p>
-                )}
-              </div>
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                    className="p-1 border border-border hover:border-foreground/50 transition-colors"
-                    aria-label="Decrease quantity"
-                  >
-                    <Minus className="h-3 w-3" />
-                  </button>
-                  <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
-                  <button
-                    onClick={() => handleIncrease(item)}
-                    className="p-1 border border-border hover:border-foreground/50 transition-colors"
-                    aria-label="Increase quantity"
-                  >
-                    <Plus className="h-3 w-3" />
-                  </button>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        className="p-1 border border-border hover:border-foreground/50 transition-colors"
+                        aria-label="Decrease quantity"
+                      >
+                        <Minus className="h-3 w-3" />
+                      </button>
+                      <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
+                      <button
+                        onClick={() => handleIncrease(item)}
+                        className="p-1 border border-border hover:border-foreground/50 transition-colors"
+                        aria-label="Increase quantity"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                    </div>
+                    <p className="text-sm font-medium">
+                      {formatPrice(item.base_price * item.quantity)}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-sm font-medium">
-                  {formatPrice(item.base_price * item.quantity)}
-                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Coupon Section */}
+          <div className="px-4 py-4 md:px-0">
+            {coupon ? (
+              <div className="flex items-center justify-between p-4 border border-accent bg-accent/5">
+                <div className="flex items-center gap-3">
+                  <Check className="h-5 w-5 text-accent" />
+                  <div>
+                    <p className="text-sm font-medium">{coupon.code}</p>
+                    <p className="text-xs text-accent">
+                      You save {formatPrice(discount)}
+                    </p>
+                  </div>
+                </div>
+                <button onClick={handleRemoveCoupon} className="text-xs text-muted-foreground hover:text-foreground">
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleOpenCoupon}
+                className="w-full flex items-center justify-between p-4 border border-border hover:border-foreground/30 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Tag className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm">Apply Coupon</span>
+                </div>
+                <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          {/* Mobile-only Summary */}
+          <div className="px-4 py-6 bg-muted/30 mx-4 md:hidden">
+            <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-4">Price Details</h3>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span>{formatPrice(subtotal)}</span>
+              </div>
+              {discount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Discount</span>
+                  <span className="text-accent">-{formatPrice(discount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Shipping</span>
+                <span className="text-accent">Complimentary</span>
+              </div>
+              <div className="flex justify-between text-base font-medium pt-3 border-t border-border">
+                <span>Total</span>
+                <span>{formatPrice(total)}</span>
               </div>
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* Coupon Section */}
-      <div className="px-4 py-4">
-        {coupon ? (
-          <div className="flex items-center justify-between p-4 border border-accent bg-accent/5">
-            <div className="flex items-center gap-3">
-              <Check className="h-5 w-5 text-accent" />
-              <div>
-                <p className="text-sm font-medium">{coupon.code}</p>
-                <p className="text-xs text-accent">
-                  You save {formatPrice(discount)}
-                </p>
-              </div>
-            </div>
-            <button onClick={handleRemoveCoupon} className="text-xs text-muted-foreground hover:text-foreground">
-              Remove
+          {/* Mobile-only Checkout CTA */}
+          <div className="px-4 py-6 md:hidden">
+            <button
+              onClick={handleProceedToCheckout}
+              disabled={checkingStock}
+              className="w-full btn-filled py-3 text-sm uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70"
+            >
+              {checkingStock && <Loader2 className="h-4 w-4 animate-spin" />}
+              Proceed to Checkout
             </button>
           </div>
-        ) : (
-          <button
-            onClick={handleOpenCoupon}
-            className="w-full flex items-center justify-between p-4 border border-border hover:border-foreground/30 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <Tag className="h-5 w-5 text-muted-foreground" />
-              <span className="text-sm">Apply Coupon</span>
-            </div>
-            <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        )}
-      </div>
-
-      {/* Summary */}
-      <div className="px-4 py-6 bg-muted/30 mx-4">
-        <h3 className="text-xs uppercase tracking-widest text-muted-foreground mb-4">Price Details</h3>
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Subtotal</span>
-            <span>{formatPrice(subtotal)}</span>
-          </div>
-          {discount > 0 && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Discount</span>
-              <span className="text-accent">-{formatPrice(discount)}</span>
-            </div>
-          )}
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Shipping</span>
-            <span className="text-accent">Complimentary</span>
-          </div>
-          <div className="flex justify-between text-base font-medium pt-3 border-t border-border">
-            <span>Total</span>
-            <span>{formatPrice(total)}</span>
-          </div>
         </div>
-      </div>
 
-      {/* Checkout CTA */}
-      <div className="px-4 py-6">
-        <button
-          onClick={handleProceedToCheckout}
-          disabled={checkingStock}
-          className="w-full btn-filled py-3 text-sm uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70"
-        >
-          {checkingStock && <Loader2 className="h-4 w-4 animate-spin" />}
-          Proceed to Checkout
-        </button>
+        {/* Desktop Order Summary Sidebar */}
+        <aside className="hidden md:block md:sticky md:top-20 md:w-80 md:flex-shrink-0 border border-border rounded-lg p-6">
+          <h3 className="text-[11px] uppercase tracking-widest text-muted-foreground mb-5">Order Summary</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>
+              <span>{formatPrice(subtotal)}</span>
+            </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Discount</span>
+                <span className="text-accent">-{formatPrice(discount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Shipping</span>
+              <span className="text-accent">Complimentary</span>
+            </div>
+            <div className="flex justify-between text-base font-medium pt-3 border-t border-border">
+              <span>Total</span>
+              <span>{formatPrice(total)}</span>
+            </div>
+          </div>
+          <button
+            onClick={handleProceedToCheckout}
+            disabled={checkingStock}
+            className="w-full mt-6 btn-filled py-3 text-sm uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70"
+          >
+            {checkingStock && <Loader2 className="h-4 w-4 animate-spin" />}
+            Proceed to Checkout
+          </button>
+        </aside>
       </div>
 
       {/* Coupon Sheet */}
