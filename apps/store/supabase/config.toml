@@ -1,0 +1,7 @@
+project_id = "gtrsfnsgchstizxxnfok"
+
+[functions.create-payment]
+verify_jwt = false
+
+[functions.create-cod-order]
+verify_jwt = false

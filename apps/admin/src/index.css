@@ -1,0 +1,278 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fascino – By Payal Design System
+   Elegant, calm, luxury boutique aesthetic
+   Mobile-first premium dashboard */
+
+@layer base {
+  :root {
+    /* Core brand colors - Soft blush pink palette */
+    --background: 30 20% 98%;
+    --foreground: 220 15% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 20%;
+
+    /* Soft blush pink primary */
+    --primary: 350 40% 70%;
+    --primary-foreground: 220 15% 15%;
+
+    /* Dark pink for active states */
+    --secondary: 350 50% 55%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Muted tones */
+    --muted: 30 15% 95%;
+    --muted-foreground: 220 10% 50%;
+
+    /* Accent - subtle warm tone */
+    --accent: 350 30% 92%;
+    --accent-foreground: 220 15% 20%;
+
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Very light dividers */
+    --border: 30 10% 90%;
+    --input: 30 15% 92%;
+    --ring: 350 40% 70%;
+
+    --radius: 1rem;
+
+    /* Status colors */
+    --status-pending: 45 90% 65%;
+    --status-processing: 200 80% 60%;
+    --status-shipped: 170 60% 50%;
+    --status-delivered: 145 60% 50%;
+    --status-cancelled: 0 65% 55%;
+
+    /* Chart colors - soft tones */
+    --chart-1: 350 40% 70%;
+    --chart-2: 350 50% 55%;
+    --chart-3: 30 30% 75%;
+    --chart-4: 200 40% 70%;
+    --chart-5: 170 40% 65%;
+
+    /* Sidebar - matching luxury theme */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 15% 20%;
+    --sidebar-primary: 350 40% 70%;
+    --sidebar-primary-foreground: 220 15% 15%;
+    --sidebar-accent: 350 30% 92%;
+    --sidebar-accent-foreground: 220 15% 20%;
+    --sidebar-border: 30 10% 90%;
+    --sidebar-ring: 350 40% 70%;
+  }
+
+  .dark {
+    --background: 220 15% 10%;
+    --foreground: 30 15% 95%;
+
+    --card: 220 15% 12%;
+    --card-foreground: 30 15% 95%;
+
+    --popover: 220 15% 12%;
+    --popover-foreground: 30 15% 95%;
+
+    --primary: 350 40% 65%;
+    --primary-foreground: 220 15% 10%;
+
+    --secondary: 350 50% 50%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 15% 18%;
+    --muted-foreground: 30 10% 60%;
+
+    --accent: 350 30% 20%;
+    --accent-foreground: 30 15% 95%;
+
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 20%;
+    --input: 220 15% 18%;
+    --ring: 350 40% 65%;
+
+    --sidebar-background: 220 15% 10%;
+    --sidebar-foreground: 30 15% 95%;
+    --sidebar-primary: 350 40% 65%;
+    --sidebar-primary-foreground: 220 15% 10%;
+    --sidebar-accent: 350 30% 20%;
+    --sidebar-accent-foreground: 30 15% 95%;
+    --sidebar-border: 220 15% 20%;
+    --sidebar-ring: 350 40% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+    @apply font-medium tracking-tight;
+  }
+}
+
+@layer components {
+  /* Premium card styling */
+  .luxury-card {
+    @apply bg-card rounded-2xl p-5 shadow-sm border-0;
+    box-shadow: 0 2px 12px -2px hsl(350 20% 70% / 0.08);
+  }
+
+  /* Soft status chips */
+  .status-chip {
+    @apply px-3 py-1 rounded-full text-xs font-medium;
+  }
+
+  .status-pending {
+    background: hsl(var(--status-pending) / 0.15);
+    color: hsl(45 70% 40%);
+  }
+
+  .status-processing {
+    background: hsl(var(--status-processing) / 0.15);
+    color: hsl(200 70% 40%);
+  }
+
+  .status-shipped {
+    background: hsl(var(--status-shipped) / 0.15);
+    color: hsl(170 50% 35%);
+  }
+
+  .status-delivered {
+    background: hsl(var(--status-delivered) / 0.15);
+    color: hsl(145 50% 35%);
+  }
+
+  .status-cancelled {
+    background: hsl(var(--status-cancelled) / 0.15);
+    color: hsl(0 55% 45%);
+  }
+
+  /* Bottom navigation styling */
+  .nav-item {
+    @apply flex flex-col items-center justify-center py-2 px-3 transition-all duration-200;
+  }
+
+  .nav-item-active {
+    @apply text-secondary;
+  }
+
+  .nav-item-inactive {
+    @apply text-muted-foreground;
+  }
+
+  /* Premium input styling */
+  .luxury-input {
+    @apply w-full px-4 py-3 rounded-xl bg-muted/50 border-0 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30 focus:bg-card transition-all duration-200;
+  }
+
+  /* Premium button styling */
+  .luxury-button {
+    @apply px-6 py-3 rounded-xl font-medium transition-all duration-200 active:scale-[0.98];
+  }
+
+  .luxury-button-primary {
+    @apply luxury-button bg-secondary text-secondary-foreground hover:bg-secondary/90;
+  }
+
+  .luxury-button-ghost {
+    @apply luxury-button bg-transparent text-foreground hover:bg-muted;
+  }
+
+  /* Toggle switch styling */
+  .luxury-toggle {
+    @apply relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/30;
+  }
+
+  /* Upload zone styling */
+  .upload-zone {
+    @apply border-2 border-dashed border-border rounded-2xl p-8 flex flex-col items-center justify-center gap-3 transition-all duration-200 hover:border-primary/50 hover:bg-accent/30 cursor-pointer;
+  }
+
+  /* Screen transition animations */
+  .screen-enter {
+    animation: screenFadeIn 0.3s ease-out;
+  }
+
+  @keyframes screenFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* List item stagger animation */
+  .list-item-enter {
+    animation: listFadeIn 0.4s ease-out backwards;
+  }
+
+  @keyframes listFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Safe area for bottom navigation */
+  .safe-bottom {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Hide scrollbar for cleaner look */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer utilities {
+  /* Premium shadows */
+  .shadow-luxury {
+    box-shadow: 0 4px 20px -4px hsl(350 20% 70% / 0.12);
+  }
+
+  .shadow-luxury-lg {
+    box-shadow: 0 8px 30px -6px hsl(350 20% 70% / 0.18);
+  }
+
+  /* Glassmorphism for overlays */
+  .glass {
+    background: hsl(var(--card) / 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}

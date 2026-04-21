@@ -1,0 +1,12 @@
+{
+  "name": "fascino",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:store": "cd apps/store && npm run dev",
+    "dev:admin": "cd apps/admin && npm run dev",
+    "build:store": "cd apps/store && npm run build",
+    "build:admin": "cd apps/admin && npm run build",
+    "build": "npm run build:store && npm run build:admin"
+  }
+}

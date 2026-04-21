@@ -1,0 +1,283 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Fascino Design System - Modernized */
+    --background: 40 30% 98%;
+    --foreground: 220 10% 25%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 10% 25%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 10% 25%;
+
+    /* Soft blush pink - slightly darker for better visibility */
+    --primary: 350 28% 93%;
+    --primary-foreground: 220 10% 25%;
+
+    /* Dark pink accent */
+    --accent: 340 48% 52%;
+    --accent-foreground: 0 0% 100%;
+
+    --secondary: 350 20% 92%;
+    --secondary-foreground: 220 10% 25%;
+
+    --muted: 350 18% 93%;
+    --muted-foreground: 220 10% 50%;
+
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 350 18% 88%;
+    --input: 350 18% 88%;
+    --ring: 340 48% 52%;
+
+    --radius: 0.625rem;
+
+    /* Custom Fascino tokens */
+    --blush: 350 28% 93%;
+    --blush-dark: 350 25% 88%;
+    --rose: 340 48% 52%;
+    --rose-light: 340 40% 70%;
+    --ivory: 40 30% 98%;
+    --charcoal: 220 10% 25%;
+    --charcoal-light: 220 10% 40%;
+
+    /* Sidebar defaults */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 220 10% 10%;
+    --foreground: 350 20% 95%;
+    --card: 220 10% 12%;
+    --card-foreground: 350 20% 95%;
+    --popover: 220 10% 12%;
+    --popover-foreground: 350 20% 95%;
+    --primary: 340 45% 55%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 340 50% 60%;
+    --accent-foreground: 0 0% 100%;
+    --secondary: 220 10% 18%;
+    --secondary-foreground: 350 20% 95%;
+    --muted: 220 10% 18%;
+    --muted-foreground: 220 10% 60%;
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 10% 20%;
+    --input: 220 10% 20%;
+    --ring: 340 45% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+  }
+}
+
+@layer components {
+  /* Brand Typography */
+  .brand-name {
+    font-family: 'Playfair Display', serif;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .brand-subline {
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  .brand-highlight {
+    color: hsl(var(--rose));
+  }
+
+  /* Premium Button Styles - Modernized */
+  .btn-premium {
+    @apply relative overflow-hidden transition-all duration-200 ease-out;
+    @apply border border-foreground/20 bg-transparent text-foreground rounded-lg;
+    @apply hover:border-accent hover:text-accent;
+    @apply active:scale-[0.98];
+    box-shadow: 0 1px 2px hsl(var(--charcoal) / 0.04);
+  }
+
+  .btn-accent {
+    @apply relative overflow-hidden transition-all duration-200 ease-out;
+    @apply border border-accent bg-transparent text-accent rounded-lg;
+    @apply hover:bg-accent hover:text-accent-foreground;
+    @apply active:scale-[0.98];
+    box-shadow: 0 1px 2px hsl(var(--charcoal) / 0.04);
+  }
+
+  .btn-filled {
+    @apply relative overflow-hidden transition-all duration-200 ease-out;
+    @apply border border-accent bg-accent text-accent-foreground rounded-lg;
+    @apply hover:bg-accent/90;
+    @apply active:scale-[0.98];
+    box-shadow: 0 2px 4px hsl(var(--rose) / 0.15);
+  }
+
+  /* Card Styles - Softer Corners */
+  .card-product {
+    @apply bg-card rounded-lg overflow-hidden transition-all duration-200 ease-out;
+    @apply hover:shadow-md hover:-translate-y-0.5;
+    box-shadow: 0 1px 3px hsl(var(--charcoal) / 0.05);
+  }
+
+  /* Collection Card Editorial Style */
+  .collection-card {
+    @apply relative overflow-hidden transition-all duration-200 ease-out rounded-lg;
+  }
+
+  .collection-card::after {
+    content: '';
+    @apply absolute inset-0 bg-charcoal/0 transition-all duration-300;
+  }
+
+  .collection-card:hover::after {
+    @apply bg-charcoal/10;
+  }
+
+  /* Navigation */
+  .nav-item {
+    @apply flex flex-col items-center justify-center gap-1 py-2 px-4 transition-colors duration-150;
+    @apply text-muted-foreground hover:text-accent;
+  }
+
+  .nav-item-active {
+    @apply text-accent;
+  }
+
+  /* Animations */
+  .fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+  }
+
+  .fade-in-up {
+    animation: fadeInUp 0.8s ease-out forwards;
+  }
+
+  .fade-in-delay-1 {
+    animation-delay: 0.1s;
+    opacity: 0;
+  }
+
+  .fade-in-delay-2 {
+    animation-delay: 0.2s;
+    opacity: 0;
+  }
+
+  .fade-in-delay-3 {
+    animation-delay: 0.3s;
+    opacity: 0;
+  }
+
+  .fade-in-delay-4 {
+    animation-delay: 0.4s;
+    opacity: 0;
+  }
+
+  /* Stagger children animation */
+  .stagger-children > * {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  .stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
+  .stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
+  .stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
+  .stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
+  .stagger-children > *:nth-child(5) { animation-delay: 0.5s; }
+  .stagger-children > *:nth-child(6) { animation-delay: 0.6s; }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Custom scrollbar for premium feel */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
