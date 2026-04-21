@@ -10,6 +10,7 @@ import { WishlistProvider } from "@/contexts/WishlistContext";
 import { StoreSettingsProvider } from "@/contexts/StoreSettingsContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import BottomNav from "@/components/BottomNav";
+import TopNav from "@/components/TopNav";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import HomePage from "@/pages/HomePage";
 import ShopPage from "@/pages/ShopPage";
@@ -85,6 +86,7 @@ const App = () => (
             <NotificationsProvider>
             <BottomNavProvider>
               <div className="min-h-screen bg-background">
+                <TopNav />
                 <AppRoutes />
                 <BottomNav />
               </div>

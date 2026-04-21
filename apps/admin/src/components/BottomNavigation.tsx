@@ -32,6 +32,7 @@ export const BottomNavigation = () => {
   };
 
   return (
+    <div className="md:hidden">
     <AnimatePresence>
       {isVisible && (
         <motion.nav
@@ -91,5 +92,6 @@ export const BottomNavigation = () => {
     </motion.nav>
       )}
     </AnimatePresence>
+    </div>
   );
 };

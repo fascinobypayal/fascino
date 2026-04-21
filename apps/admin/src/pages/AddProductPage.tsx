@@ -570,6 +570,15 @@ const AddProductPage = () => {
                 `Add Product (${localImages.length} image${localImages.length !== 1 ? "s" : ""})`
               )}
             </button>
+            {(!name || !price || localImages.length === 0) && !saving && (
+              <p className="text-xs text-muted-foreground text-center -mt-2">
+                {!name
+                  ? "Product name is required"
+                  : !price
+                  ? "Price is required"
+                  : "At least one image is required"}
+              </p>
+            )}
           </div>
         </motion.div>
       </main>

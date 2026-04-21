@@ -1,23 +1,12 @@
-import { ReactNode, createContext, useContext } from "react";
+import { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { BottomNavigation } from "./BottomNavigation";
+import { Sidebar } from "./Sidebar";
+import { AdminContext } from "@/contexts/AdminContext";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 
-interface AdminProfile {
-  full_name: string;
-  email: string;
-  role: string | null;
-}
-
-interface AdminContextType {
-  profile: AdminProfile | null;
-  signOutAndRedirect: () => Promise<void>;
-}
-
-const AdminContext = createContext<AdminContextType>({ profile: null, signOutAndRedirect: async () => {} });
-
-export const useAdminContext = () => useContext(AdminContext);
+export { useAdminContext } from "@/contexts/AdminContext";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -38,38 +27,44 @@ export const AdminLayout = ({ children, title, subtitle }: AdminLayoutProps) => 
 
   return (
     <AdminContext.Provider value={{ profile, signOutAndRedirect }}>
-      <div className="min-h-screen bg-background flex flex-col">
-        {/* Header */}
-        <header className="sticky top-0 z-40 glass border-b border-border px-4 py-4">
-          <div className="max-w-lg mx-auto">
-            {title && (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <h1 className="text-xl font-serif text-foreground">{title}</h1>
-                {subtitle && (
-                  <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
-                )}
-              </motion.div>
-            )}
-          </div>
-        </header>
+      <div className="min-h-screen bg-background flex">
+        {/* Desktop Sidebar */}
+        <Sidebar />
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto px-4 py-6 pb-28 max-w-lg mx-auto w-full">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-          >
-            {children}
-          </motion.div>
-        </main>
+        {/* Main content area */}
+        <div className="flex-1 flex flex-col md:ml-64">
+          {/* Header */}
+          <header className="sticky top-0 z-40 glass border-b border-border px-4 py-4 md:px-6">
+            <div className="max-w-2xl mx-auto md:mx-0">
+              {title && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <h1 className="text-xl font-serif text-foreground">{title}</h1>
+                  {subtitle && (
+                    <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
+                  )}
+                </motion.div>
+              )}
+            </div>
+          </header>
 
-        {/* Bottom Navigation */}
-        <BottomNavigation />
+          {/* Main Content */}
+          <main className="flex-1 overflow-y-auto px-4 py-6 pb-28 md:pb-6 max-w-2xl mx-auto md:mx-0 md:max-w-4xl w-full">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              {children}
+            </motion.div>
+          </main>
+
+          {/* Bottom Navigation — mobile only */}
+          <BottomNavigation />
+        </div>
       </div>
     </AdminContext.Provider>
   );

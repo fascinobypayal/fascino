@@ -274,7 +274,18 @@ const AddCouponPage = () => {
       </main>
 
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-lg mx-auto space-y-2">
+          {!isValid && !isSaving && (
+            <p className="text-xs text-muted-foreground text-center">
+              {!form.code.trim()
+                ? "Coupon code is required"
+                : !(Number(form.discount_value) > 0)
+                ? "Discount value must be greater than 0"
+                : !(form.expiry_date >= today)
+                ? "Expiry date must be today or later"
+                : "Max usage must be at least 1"}
+            </p>
+          )}
           <button
             onClick={handleSave}
             disabled={!isValid || isSaving}
