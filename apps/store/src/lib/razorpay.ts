@@ -59,7 +59,7 @@ export async function pollCheckoutSession(
   supabase: any,
   sessionId: string,
   intervalMs = 2000,
-  timeoutMs = 20000
+  timeoutMs = 60000
 ): Promise<'PAYMENT_SUCCESS' | 'TIMEOUT'> {
   const start = Date.now();
 

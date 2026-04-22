@@ -328,10 +328,16 @@ const CheckoutPage = () => {
           setIsProcessing(false);
         },
         onDismiss: () => {
-          if (paymentState === 'paying') {
-            setPaymentState('idle');
-            setIsProcessing(false);
-          }
+          // Use functional update to read current state, not the stale closure value.
+          // Without this, ondismiss (fired when modal closes after payment) would
+          // overwrite 'confirming' back to 'idle' due to the stale closure.
+          setPaymentState((current) => {
+            if (current === 'paying') {
+              setIsProcessing(false);
+              return 'idle';
+            }
+            return current;
+          });
         },
       });
     } catch (err: any) {
