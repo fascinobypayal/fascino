@@ -167,7 +167,7 @@ export const useProductDetail = (id: string | undefined) => {
         if (error.code === "23503" || error.message.toLowerCase().includes("foreign key")) {
           const { error: softErr } = await supabase
             .from("products")
-            .update({ is_active: false })
+            .update({ is_deleted: true, is_published: false })
             .eq("id", id!);
           if (softErr) throw softErr;
           return { softDeleted: true };
