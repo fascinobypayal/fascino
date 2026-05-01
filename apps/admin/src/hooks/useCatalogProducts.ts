@@ -151,17 +151,46 @@ export const useProductDetail = (id: string | undefined) => {
 
   const deleteProduct = useMutation({
     mutationFn: async () => {
-      // Delete related records first
+      // Check if this product has been ordered (preserve order history)
+      const { data: orderItems } = await supabase
+        .from("order_items")
+        .select("id")
+        .eq("product_id", id!)
+        .limit(1);
+
+      if (orderItems && orderItems.length > 0) {
+        // Product has order history — soft delete only (deactivate, don't destroy)
+        const { error } = await supabase
+          .from("products")
+          .update({ is_active: false })
+          .eq("id", id!);
+        if (error) throw error;
+        return { softDeleted: true };
+      }
+
+      // No order history — safe to hard delete
+      // Remove from all dependent tables first (order matters for FK constraints)
+      await supabase.from("cart_items").delete().eq("product_id", id!);
+      await supabase.from("wishlist_items").delete().eq("product_id", id!);
       await supabase.from("product_images").delete().eq("product_id", id!);
       await supabase.from("product_customizations").delete().eq("product_id", id!);
       await supabase.from("product_customization_settings").delete().eq("product_id", id!);
       await supabase.from("collection_products").delete().eq("product_id", id!);
+
       const { error } = await supabase.from("products").delete().eq("id", id!);
       if (error) throw error;
+      return { softDeleted: false };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["catalog-products"] });
-      toast({ title: "Product deleted" });
+      if (result?.softDeleted) {
+        toast({
+          title: "Product deactivated",
+          description: "This product has past orders, so it was deactivated instead of deleted. It will no longer appear in the store.",
+        });
+      } else {
+        toast({ title: "Product deleted" });
+      }
     },
     onError: (e: Error) => {
       toast({ title: "Error deleting product", description: e.message, variant: "destructive" });
