@@ -163,8 +163,15 @@ export const useProductDetail = (id: string | undefined) => {
       const { error } = await supabase.from("products").delete().eq("id", id!);
 
       if (error) {
-        // FK constraint means product is referenced by order history — soft delete instead
-        if (error.code === "23503" || error.message.toLowerCase().includes("foreign key")) {
+        // FK or NOT NULL constraint means product is referenced by order history — soft delete instead
+        const msg = error.message.toLowerCase();
+        if (
+          error.code === "23503" ||
+          error.code === "23502" ||
+          msg.includes("foreign key") ||
+          msg.includes("not-null") ||
+          msg.includes("order_items")
+        ) {
           const { error: softErr } = await supabase
             .from("products")
             .update({ is_deleted: true, is_published: false })
