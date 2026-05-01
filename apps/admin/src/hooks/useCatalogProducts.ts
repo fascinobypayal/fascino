@@ -151,25 +151,7 @@ export const useProductDetail = (id: string | undefined) => {
 
   const deleteProduct = useMutation({
     mutationFn: async () => {
-      // Check if this product has been ordered (preserve order history)
-      const { data: orderItems } = await supabase
-        .from("order_items")
-        .select("id")
-        .eq("product_id", id!)
-        .limit(1);
-
-      if (orderItems && orderItems.length > 0) {
-        // Product has order history — soft delete only (deactivate, don't destroy)
-        const { error } = await supabase
-          .from("products")
-          .update({ is_active: false })
-          .eq("id", id!);
-        if (error) throw error;
-        return { softDeleted: true };
-      }
-
-      // No order history — safe to hard delete
-      // Remove from all dependent tables first (order matters for FK constraints)
+      // Clear all dependent records that are safe to remove
       await supabase.from("cart_items").delete().eq("product_id", id!);
       await supabase.from("wishlist_items").delete().eq("product_id", id!);
       await supabase.from("product_images").delete().eq("product_id", id!);
@@ -177,8 +159,21 @@ export const useProductDetail = (id: string | undefined) => {
       await supabase.from("product_customization_settings").delete().eq("product_id", id!);
       await supabase.from("collection_products").delete().eq("product_id", id!);
 
+      // Attempt hard delete
       const { error } = await supabase.from("products").delete().eq("id", id!);
-      if (error) throw error;
+
+      if (error) {
+        // FK constraint means product is referenced by order history — soft delete instead
+        if (error.code === "23503" || error.message.toLowerCase().includes("foreign key")) {
+          const { error: softErr } = await supabase
+            .from("products")
+            .update({ is_active: false })
+            .eq("id", id!);
+          if (softErr) throw softErr;
+          return { softDeleted: true };
+        }
+        throw error;
+      }
       return { softDeleted: false };
     },
     onSuccess: (result) => {
@@ -186,7 +181,7 @@ export const useProductDetail = (id: string | undefined) => {
       if (result?.softDeleted) {
         toast({
           title: "Product deactivated",
-          description: "This product has past orders, so it was deactivated instead of deleted. It will no longer appear in the store.",
+          description: "This product has past orders so it was deactivated instead of deleted. It will no longer appear in the store.",
         });
       } else {
         toast({ title: "Product deleted" });
