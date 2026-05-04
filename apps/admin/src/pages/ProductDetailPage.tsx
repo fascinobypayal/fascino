@@ -15,6 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useProductDetail } from "@/hooks/useCatalogProducts";
+import { useCategories } from "@/hooks/useCategories";
 import { toast } from "@/hooks/use-toast";
 
 interface LocalCustomization {
@@ -23,8 +24,6 @@ interface LocalCustomization {
   extraPrice: number;
   isFree: boolean;
 }
-
-const categories = ["Sarees", "Lehengas", "Kurtas", "Accessories", "Bridal"];
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -44,12 +43,14 @@ const ProductDetailPage = () => {
     deleteImage,
   } = useProductDetail(id);
 
+  const { categoryNames } = useCategories();
+
   const [activeImage, setActiveImage] = useState(0);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState(0);
   const [stock, setStock] = useState(0);
-  const [category, setCategory] = useState(categories[0]);
+  const [category, setCategory] = useState("");
   const [published, setPublished] = useState(true);
   const [featured, setFeatured] = useState(false);
   const [newArrival, setNewArrival] = useState(false);
@@ -66,7 +67,7 @@ const ProductDetailPage = () => {
       setDescription(product.description || "");
       setPrice(Number(product.price));
       setStock(product.stock);
-      setCategory(product.category || categories[0]);
+      setCategory(product.category || "");
       setPublished(product.is_published ?? true);
       setFeatured(product.is_featured ?? false);
       setNewArrival(product.is_new ?? false);
@@ -351,7 +352,8 @@ const ProductDetailPage = () => {
                     onChange={(e) => setCategory(e.target.value)}
                     className="luxury-input mt-2"
                   >
-                    {categories.map((cat) => (
+                    <option value="" disabled>Select a category</option>
+                    {categoryNames.map((cat) => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>

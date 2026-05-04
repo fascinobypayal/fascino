@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Upload, Loader2, X, Eye, EyeOff, Star, Sparkles, Plus } from "lucide-react";
 import { LuxuryCard } from "@/components/LuxuryCard";
 import { useCreateProduct } from "@/hooks/useCatalogProducts";
+import { useCategories } from "@/hooks/useCategories";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -20,17 +21,16 @@ interface LocalCustomization {
   isFree: boolean;
 }
 
-const categories = ["Sarees", "Lehengas", "Kurtas", "Accessories", "Bridal"];
-
 const AddProductPage = () => {
   const navigate = useNavigate();
   const createProduct = useCreateProduct();
+  const { categoryNames } = useCategories();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState<number>(0);
-  const [category, setCategory] = useState(categories[0]);
+  const [category, setCategory] = useState("");
   const [stock, setStock] = useState<number>(0);
   const [published, setPublished] = useState(true);
   const [featured, setFeatured] = useState(false);
@@ -368,7 +368,8 @@ const AddProductPage = () => {
                     onChange={(e) => setCategory(e.target.value)}
                     className="luxury-input mt-2"
                   >
-                    {categories.map((cat) => (
+                    <option value="" disabled>Select a category</option>
+                    {categoryNames.map((cat) => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
