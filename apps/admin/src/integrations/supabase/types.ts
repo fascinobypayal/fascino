@@ -217,6 +217,27 @@ export type Database = {
           },
         ]
       }
+      categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       checkout_sessions: {
         Row: {
           amount: number
@@ -771,7 +792,7 @@ export type Database = {
           created_at: string | null
           id: string
           order_id: string | null
-          product_id: string
+          product_id: string | null
           product_image_url: string | null
           product_name: string
           quantity: number
@@ -781,7 +802,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           order_id?: string | null
-          product_id: string
+          product_id?: string | null
           product_image_url?: string | null
           product_name: string
           quantity: number
@@ -791,7 +812,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           order_id?: string | null
-          product_id?: string
+          product_id?: string | null
           product_image_url?: string | null
           product_name?: string
           quantity?: number
@@ -1358,3 +1379,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+<claude-code-hint v="1" type="plugin" value="supabase@claude-plugins-official" />
