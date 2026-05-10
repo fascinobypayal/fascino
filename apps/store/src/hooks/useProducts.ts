@@ -178,6 +178,7 @@ export function useProductDetail(productId: string | undefined) {
   const [product, setProduct] = useState<DbProduct | null>(null);
   const [images, setImages] = useState<string[]>([]);
   const [customizations, setCustomizations] = useState<{ id: string; name: string; price: number; is_paid: boolean }[]>([]);
+  const [sizes, setSizes] = useState<{ label: string; stock: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -204,6 +205,12 @@ export function useProductDetail(productId: string | undefined) {
         .select('id, name, price, is_paid')
         .eq('product_id', productId);
 
+      const { data: productSizes } = await supabase
+        .from('product_sizes')
+        .select('size_label, stock')
+        .eq('product_id', productId)
+        .order('sort_order', { ascending: true });
+
       setProduct({
         id: p.id,
         name: p.name,
@@ -224,10 +231,14 @@ export function useProductDetail(productId: string | undefined) {
         price: c.price ?? 0,
         is_paid: c.is_paid ?? false,
       })));
+      setSizes((productSizes || []).map(s => ({
+        label: s.size_label,
+        stock: s.stock ?? 0,
+      })));
       setLoading(false);
     };
     fetch();
   }, [productId]);
 
-  return { product, images, customizations, loading };
+  return { product, images, customizations, sizes, loading };
 }

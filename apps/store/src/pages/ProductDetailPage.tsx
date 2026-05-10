@@ -18,20 +18,18 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet';
 
-const sizes = ['XS', 'S', 'M', 'L', 'XL'];
-
 const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { hideNav, showNav } = useBottomNav();
   const { showAuthModal, closeAuthModal, requireAuth } = useAuthGuard();
-  
+
   const { addToCart } = useCart();
   const { isWishlisted: checkWishlisted, toggleWishlist } = useWishlist();
   const { formatPrice } = useStoreSettings();
 
-  const { product, images, customizations, loading } = useProductDetail(id);
+  const { product, images, customizations, sizes, loading } = useProductDetail(id);
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [heartAnimating, setHeartAnimating] = useState(false);
@@ -170,15 +168,14 @@ const ProductDetailPage = () => {
   const displayImages = images.length > 0 ? images : [product.image || ''];
 
   return (
-    <div className="min-h-screen pb-24 md:pb-0">
-      {/* Mobile: fixed back + action buttons */}
-      <button onClick={() => navigate(-1)} className="fixed top-4 left-4 z-50 p-2.5 bg-card/90 backdrop-blur-sm rounded-xl shadow-sm md:hidden" aria-label="Go back">
+    <div className="min-h-screen pb-24">
+      <button onClick={() => navigate(-1)} className="fixed top-4 left-4 z-50 p-2.5 bg-card/90 backdrop-blur-sm rounded-xl shadow-sm" aria-label="Go back">
         <svg className="h-5 w-5 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
         </svg>
       </button>
 
-      <div className="fixed top-4 right-4 z-50 flex gap-2 md:hidden">
+      <div className="fixed top-4 right-4 z-50 flex gap-2">
         <button onClick={handleShare} className="p-2.5 bg-card/90 backdrop-blur-sm rounded-xl shadow-sm" aria-label="Share">
           <Share2 className="h-5 w-5 text-foreground" />
         </button>
@@ -193,138 +190,84 @@ const ProductDetailPage = () => {
         </button>
       </div>
 
-      {/* Desktop: back button in-flow */}
-      <div className="hidden md:flex items-center px-10 pt-6 pb-2">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors" aria-label="Go back">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back
-        </button>
-      </div>
+      <ImageCarousel images={displayImages} alt={product.name} />
 
-      {/* Desktop two-column layout */}
-      <div className="md:flex md:min-h-screen md:items-start md:max-w-7xl md:mx-auto">
-        {/* Left: Image gallery */}
-        <div className="md:w-[55%] md:sticky md:top-24 md:self-start">
-          <ImageCarousel images={displayImages} alt={product.name} />
-        </div>
-
-        {/* Right: Product info */}
-        <div className="px-4 py-6 animate-fade-in-up md:w-[45%] md:px-10 md:py-10 md:min-h-screen">
-          {/* Desktop wishlist + share inline */}
-          <div className="hidden md:flex items-center justify-end gap-3 mb-6">
-            <button onClick={handleShare} className="p-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="Share">
-              <Share2 className="h-5 w-5" />
-            </button>
-            <button onClick={handleToggleWishlist} className="p-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="Add to wishlist">
-              <Heart
-                className={`h-5 w-5 transition-all duration-300 ${isProductWishlisted ? 'fill-accent text-accent' : 'text-foreground'}`}
-                style={{
-                  transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease, fill 0.2s ease',
-                  transform: heartAnimating ? 'scale(1.3)' : 'scale(1)',
-                }}
-              />
-            </button>
+      <div className="px-4 py-6 animate-fade-in-up">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{product.category}</p>
+            <h1 className="font-serif text-2xl mt-1">{product.name}</h1>
           </div>
-
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{product.category}</p>
-              <h1 className="font-serif text-2xl mt-1">{product.name}</h1>
-            </div>
-            {hasCustomizations && (
-              <span className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-accent bg-accent/10 px-2 py-1">
-                <Sparkles className="h-3 w-3" />Customisable
-              </span>
-            )}
-          </div>
-          <p className="text-lg font-medium mt-2">{formatPrice(product.price)}</p>
-          {outOfStock && <p className="text-sm text-destructive mt-1">Out of Stock</p>}
-
-          <div className="mt-6">
-            <SizeSelector sizes={sizes} selectedSize={selectedSize} onSelectSize={setSelectedSize} />
-          </div>
-
           {hasCustomizations && (
-            <button onClick={handleOpenCustomization} className="w-full mt-6 flex items-center justify-between p-4 border border-border hover:border-foreground/30 transition-colors">
-              <div className="flex items-center gap-3">
-                <Sparkles className="h-5 w-5 text-accent" />
-                <div className="text-left">
-                  <p className="text-sm font-medium">Customise this piece</p>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedCustomizations.size > 0 ? `${selectedCustomizations.size} selected` : 'Add personalizations'}
-                  </p>
-                </div>
+            <span className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-accent bg-accent/10 px-2 py-1">
+              <Sparkles className="h-3 w-3" />Customisable
+            </span>
+          )}
+        </div>
+        <p className="text-lg font-medium mt-2">{formatPrice(product.price)}</p>
+        {outOfStock && <p className="text-sm text-destructive mt-1">Out of Stock</p>}
+
+        <div className="mt-6">
+          <SizeSelector sizes={sizes} selectedSize={selectedSize} onSelectSize={setSelectedSize} />
+        </div>
+
+        {hasCustomizations && (
+          <button onClick={handleOpenCustomization} className="w-full mt-6 flex items-center justify-between p-4 border border-border hover:border-foreground/30 transition-colors">
+            <div className="flex items-center gap-3">
+              <Sparkles className="h-5 w-5 text-accent" />
+              <div className="text-left">
+                <p className="text-sm font-medium">Customise this piece</p>
+                <p className="text-xs text-muted-foreground">
+                  {selectedCustomizations.size > 0 ? `${selectedCustomizations.size} selected` : 'Add personalizations'}
+                </p>
               </div>
-              <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          )}
-
-          {/* Selected customization tags */}
-          {selectedCustomizations.size > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {getSelectedCustomizationsList().map(c => (
-                <span key={c.id} className="text-xs bg-accent/10 text-accent px-2.5 py-1 rounded-sm">
-                  {c.name}{c.is_paid ? ` +${formatPrice(c.price)}` : ''}
-                </span>
-              ))}
             </div>
-          )}
+            <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        )}
 
-          {product.description && (
-            <div className="mt-8 space-y-4">
-              <h3 className="text-xs uppercase tracking-widest text-muted-foreground">Description</h3>
-              <p className="text-sm text-foreground/80 leading-relaxed">{product.description}</p>
-            </div>
-          )}
-
-          <div className="mt-6 space-y-2">
-            <h3 className="text-xs uppercase tracking-widest text-muted-foreground">Care</h3>
-            <p className="text-sm text-foreground/80">Dry clean only. Store in provided garment bag.</p>
+        {/* Selected customization tags */}
+        {selectedCustomizations.size > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {getSelectedCustomizationsList().map(c => (
+              <span key={c.id} className="text-xs bg-accent/10 text-accent px-2.5 py-1 rounded-sm">
+                {c.name}{c.is_paid ? ` +${formatPrice(c.price)}` : ''}
+              </span>
+            ))}
           </div>
+        )}
 
-          {/* Desktop inline CTA buttons */}
-          <div className="hidden md:flex gap-3 mt-10">
-            <button
-              onClick={addedToCart ? () => navigate('/cart') : handleAddToCart}
-              disabled={addingToCart || (outOfStock && !addedToCart)}
-              className="flex-1 py-3.5 text-xs uppercase tracking-widest border border-foreground/20 rounded-lg hover:border-accent hover:text-accent transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {addingToCart ? <Loader2 className="h-4 w-4 animate-spin" /> : addedToCart ? 'Go to Cart' : outOfStock ? 'Out of Stock' : 'Add to Cart'}
-            </button>
-            <button
-              onClick={handleBuyNow}
-              disabled={addingToCart || outOfStock}
-              className="flex-1 py-3.5 text-xs uppercase tracking-widest bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors shadow-sm disabled:opacity-50"
-            >
-              Buy Now
-            </button>
+        {product.description && (
+          <div className="mt-8 space-y-4">
+            <h3 className="text-xs uppercase tracking-widest text-muted-foreground">Description</h3>
+            <p className="text-sm text-foreground/80 leading-relaxed">{product.description}</p>
           </div>
+        )}
+
+        <div className="mt-6 space-y-2">
+          <h3 className="text-xs uppercase tracking-widest text-muted-foreground">Care</h3>
+          <p className="text-sm text-foreground/80">Dry clean only. Store in provided garment bag.</p>
         </div>
       </div>
 
-      {/* Mobile-only BottomActionBar */}
-      <div className="md:hidden">
-        <BottomActionBar>
-          <button
-            onClick={addedToCart ? () => navigate('/cart') : handleAddToCart}
-            disabled={addingToCart || (outOfStock && !addedToCart)}
-            className="flex-1 py-3.5 text-xs uppercase tracking-widest border border-foreground/20 rounded-lg hover:border-accent hover:text-accent transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {addingToCart ? <Loader2 className="h-4 w-4 animate-spin" /> : addedToCart ? 'Go to Cart' : outOfStock ? 'Out of Stock' : 'Add to Cart'}
-          </button>
-          <button
-            onClick={handleBuyNow}
-            disabled={addingToCart || outOfStock}
-            className="flex-1 py-3.5 text-xs uppercase tracking-widest bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors shadow-sm disabled:opacity-50"
-          >
-            Buy Now
-          </button>
-        </BottomActionBar>
-      </div>
+      <BottomActionBar>
+        <button
+          onClick={addedToCart ? () => navigate('/cart') : handleAddToCart}
+          disabled={addingToCart || (outOfStock && !addedToCart)}
+          className="flex-1 py-3.5 text-xs uppercase tracking-widest border border-foreground/20 rounded-lg hover:border-accent hover:text-accent transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          {addingToCart ? <Loader2 className="h-4 w-4 animate-spin" /> : addedToCart ? 'Go to Cart' : outOfStock ? 'Out of Stock' : 'Add to Cart'}
+        </button>
+        <button
+          onClick={handleBuyNow}
+          disabled={addingToCart || outOfStock}
+          className="flex-1 py-3.5 text-xs uppercase tracking-widest bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors shadow-sm disabled:opacity-50"
+        >
+          Buy Now
+        </button>
+      </BottomActionBar>
 
       {/* Customization Sheet */}
       <Sheet open={showCustomization} onOpenChange={(open) => !open && handleCloseCustomization()}>

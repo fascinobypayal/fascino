@@ -35,6 +35,19 @@ export interface ProductCustomization {
   product_id: string | null;
 }
 
+export interface ProductSize {
+  id: string;
+  product_id: string | null;
+  size_label: string;
+  stock: number | null;
+  sort_order: number | null;
+}
+
+const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+const SIZE_SORT: Record<string, number> = { XS: 0, S: 1, M: 2, L: 3, XL: 4, XXL: 5 };
+
+export { ALL_SIZES, SIZE_SORT };
+
 export const useCatalogProducts = () => {
   const queryClient = useQueryClient();
 
@@ -131,6 +144,20 @@ export const useProductDetail = (id: string | undefined) => {
     enabled: !!id,
   });
 
+  const { data: productSizes = [] } = useQuery({
+    queryKey: ["product-sizes", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_sizes")
+        .select("*")
+        .eq("product_id", id!)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return data as ProductSize[];
+    },
+    enabled: !!id,
+  });
+
   const updateProduct = useMutation({
     mutationFn: async (updates: Record<string, unknown>) => {
       const { error } = await supabase
@@ -151,48 +178,18 @@ export const useProductDetail = (id: string | undefined) => {
 
   const deleteProduct = useMutation({
     mutationFn: async () => {
-      // Clear all dependent records that are safe to remove
-      await supabase.from("cart_items").delete().eq("product_id", id!);
-      await supabase.from("wishlist_items").delete().eq("product_id", id!);
+      // Delete related records first
       await supabase.from("product_images").delete().eq("product_id", id!);
       await supabase.from("product_customizations").delete().eq("product_id", id!);
       await supabase.from("product_customization_settings").delete().eq("product_id", id!);
+      await supabase.from("product_sizes").delete().eq("product_id", id!);
       await supabase.from("collection_products").delete().eq("product_id", id!);
-
-      // Attempt hard delete
       const { error } = await supabase.from("products").delete().eq("id", id!);
-
-      if (error) {
-        // FK or NOT NULL constraint means product is referenced by order history — soft delete instead
-        const msg = error.message.toLowerCase();
-        if (
-          error.code === "23503" ||
-          error.code === "23502" ||
-          msg.includes("foreign key") ||
-          msg.includes("not-null") ||
-          msg.includes("order_items")
-        ) {
-          const { error: softErr } = await supabase
-            .from("products")
-            .update({ is_deleted: true, is_published: false })
-            .eq("id", id!);
-          if (softErr) throw softErr;
-          return { softDeleted: true };
-        }
-        throw error;
-      }
-      return { softDeleted: false };
+      if (error) throw error;
     },
-    onSuccess: (result) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["catalog-products"] });
-      if (result?.softDeleted) {
-        toast({
-          title: "Product deactivated",
-          description: "This product has past orders so it was deactivated instead of deleted. It will no longer appear in the store.",
-        });
-      } else {
-        toast({ title: "Product deleted" });
-      }
+      toast({ title: "Product deleted" });
     },
     onError: (e: Error) => {
       toast({ title: "Error deleting product", description: e.message, variant: "destructive" });
@@ -265,15 +262,34 @@ export const useProductDetail = (id: string | undefined) => {
     queryClient.invalidateQueries({ queryKey: ["catalog-products"] });
   };
 
+  const saveProductSizes = async (sizes: { size_label: string; stock: number }[]) => {
+    await supabase.from("product_sizes").delete().eq("product_id", id!);
+    if (sizes.length === 0) return;
+    const validSizes = sizes.filter((s) => s.stock > 0);
+    if (validSizes.length === 0) return;
+    const { error } = await supabase.from("product_sizes").insert(
+      validSizes.map((s) => ({
+        product_id: id!,
+        size_label: s.size_label,
+        stock: s.stock,
+        sort_order: SIZE_SORT[s.size_label] ?? 99,
+      }))
+    );
+    if (error) throw error;
+    queryClient.invalidateQueries({ queryKey: ["product-sizes", id] });
+  };
+
   return {
     product,
     images,
     customizations,
     customizationSettings,
+    productSizes,
     isLoading: loadingProduct || loadingImages,
     updateProduct,
     deleteProduct,
     saveCustomizations,
+    saveProductSizes,
     uploadImage,
     deleteImage,
   };
@@ -293,6 +309,7 @@ export const useCreateProduct = () => {
       is_featured?: boolean;
       is_new?: boolean;
       is_customizable?: boolean;
+      sizes?: { size_label: string; stock: number }[];
     }) => {
       const { data: product, error } = await supabase
         .from("products")
@@ -310,6 +327,23 @@ export const useCreateProduct = () => {
         .select()
         .single();
       if (error) throw error;
+
+      // Save sizes after product creation
+      if (data.sizes && data.sizes.length > 0) {
+        const validSizes = data.sizes.filter((s) => s.stock > 0);
+        if (validSizes.length > 0) {
+          const { error: sizeError } = await supabase.from("product_sizes").insert(
+            validSizes.map((s) => ({
+              product_id: product.id,
+              size_label: s.size_label,
+              stock: s.stock,
+              sort_order: SIZE_SORT[s.size_label] ?? 99,
+            }))
+          );
+          if (sizeError) throw sizeError;
+        }
+      }
+
       return product;
     },
     onSuccess: () => {

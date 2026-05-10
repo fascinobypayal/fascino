@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Upload, Loader2, X, Eye, EyeOff, Star, Sparkles, Plus } from "lucide-react";
 import { LuxuryCard } from "@/components/LuxuryCard";
 import { useCreateProduct } from "@/hooks/useCatalogProducts";
-import { useCategories } from "@/hooks/useCategories";
+import { ALL_SIZES } from "@/hooks/useCatalogProducts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -21,23 +21,31 @@ interface LocalCustomization {
   isFree: boolean;
 }
 
+interface LocalSize {
+  label: string;
+  stock: number;
+}
+
+const categories = ["Sarees", "Lehengas", "Kurtas", "Accessories", "Bridal"];
+
 const AddProductPage = () => {
   const navigate = useNavigate();
   const createProduct = useCreateProduct();
-  const { categoryNames } = useCategories();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState<number>(0);
-  const [category, setCategory] = useState("");
-  const [stock, setStock] = useState<number>(0);
+  const [category, setCategory] = useState(categories[0]);
   const [published, setPublished] = useState(true);
   const [featured, setFeatured] = useState(false);
   const [newArrival, setNewArrival] = useState(false);
   const [customizationEnabled, setCustomizationEnabled] = useState(false);
   const [allowCustomNote, setAllowCustomNote] = useState(false);
   const [customizationOptions, setCustomizationOptions] = useState<LocalCustomization[]>([]);
+  const [sizes, setSizes] = useState<LocalSize[]>(
+    ALL_SIZES.map((label) => ({ label, stock: 0 }))
+  );
   const [saving, setSaving] = useState(false);
 
   const [localImages, setLocalImages] = useState<LocalImage[]>([]);
@@ -112,80 +120,69 @@ const AddProductPage = () => {
 
   const handleSubmit = async () => {
     if (!name || !price || localImages.length === 0) return;
+    if (!sizes.some((s) => s.stock > 0)) {
+      toast({ title: "Add at least one size with stock", variant: "destructive" });
+      return;
+    }
     setSaving(true);
 
     let productId: string | null = null;
 
     try {
-      // 1. Create product
+      const totalStock = sizes.reduce((sum, s) => sum + s.stock, 0);
       const product = await createProduct.mutateAsync({
         name,
         description,
         price,
-        stock,
+        stock: totalStock,
         category,
         is_published: published,
         is_featured: featured,
         is_new: newArrival,
         is_customizable: customizationEnabled,
+        sizes: sizes.filter((s) => s.stock > 0).map((s) => ({ size_label: s.label, stock: s.stock })),
       });
       productId = product.id;
 
-      // 2. Upload images to storage
+      // Upload images
       const imageUrls = await uploadImagesToStorage(product.id);
-
-      // 3. Insert image records
       const imageRecords = imageUrls.map((url, index) => ({
         product_id: product.id,
         image_url: url,
         sort_order: index + 1,
       }));
-
-      const { error: imgError } = await supabase
-        .from("product_images")
-        .insert(imageRecords);
+      const { error: imgError } = await supabase.from("product_images").insert(imageRecords);
       if (imgError) throw imgError;
 
-      // 4. Save customizations if enabled
+      // Save customizations if enabled
       if (customizationEnabled) {
         const validOptions = customizationOptions.filter((o) => o.name.trim());
         if (validOptions.length > 0) {
-          const { error: custError } = await supabase
-            .from("product_customizations")
-            .insert(
-              validOptions.map((o) => ({
-                product_id: product.id,
-                name: o.name,
-                price: o.isFree ? 0 : o.extraPrice,
-                is_paid: !o.isFree,
-              }))
-            );
+          const { error: custError } = await supabase.from("product_customizations").insert(
+            validOptions.map((o) => ({
+              product_id: product.id,
+              name: o.name,
+              price: o.isFree ? 0 : o.extraPrice,
+              is_paid: !o.isFree,
+            }))
+          );
           if (custError) throw custError;
         }
-
         const { error: settingsError } = await supabase
           .from("product_customization_settings")
-          .insert({
-            product_id: product.id,
-            allow_custom_note: allowCustomNote,
-          });
+          .insert({ product_id: product.id, allow_custom_note: allowCustomNote });
         if (settingsError) throw settingsError;
       }
 
       toast({ title: "Product created" });
       navigate("/catalog");
     } catch (err: any) {
-      // Cleanup on failure
       if (productId) {
         await cleanupStorage(productId);
         await supabase.from("product_images").delete().eq("product_id", productId);
         await supabase.from("products").delete().eq("id", productId);
       }
-      toast({
-        title: "Error creating product",
-        description: err.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error creating product", description: err.message, variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -347,15 +344,14 @@ const AddProductPage = () => {
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Stock
+                      Total Stock
                     </label>
-                    <input
-                      type="number"
-                      value={stock || ""}
-                      onChange={(e) => setStock(parseInt(e.target.value) || 0)}
-                      className="luxury-input mt-2"
-                      placeholder="0"
-                    />
+                    <div className="luxury-input mt-2 flex items-center h-[42px]">
+                      <span className="text-sm text-foreground">
+                        {sizes.reduce((sum, s) => sum + s.stock, 0)}
+                      </span>
+                      <span className="text-xs text-muted-foreground ml-2">units</span>
+                    </div>
                   </div>
                 </div>
 
@@ -368,12 +364,49 @@ const AddProductPage = () => {
                     onChange={(e) => setCategory(e.target.value)}
                     className="luxury-input mt-2"
                   >
-                    <option value="" disabled>Select a category</option>
-                    {categoryNames.map((cat) => (
+                    {categories.map((cat) => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
                 </div>
+              </div>
+            </LuxuryCard>
+
+            {/* Sizes */}
+            <LuxuryCard>
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
+                Available Sizes
+              </h3>
+              <div className="space-y-3">
+                {sizes.map((size) => (
+                  <div key={size.label} className="flex items-center gap-3">
+                    <span className="w-12 text-sm font-medium text-foreground">{size.label}</span>
+                    <div className="flex items-center gap-2 flex-1">
+                      <input
+                        type="number"
+                        min="0"
+                        value={size.stock || ""}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 0;
+                          setSizes((prev) =>
+                            prev.map((s) => (s.label === size.label ? { ...s, stock: val } : s))
+                          );
+                        }}
+                        className="luxury-input flex-1"
+                        placeholder="0"
+                      />
+                      <span className="text-xs text-muted-foreground">units</span>
+                    </div>
+                    {size.stock > 0 && (
+                      <span className="text-xs text-secondary font-medium">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                ))}
+                <p className="text-xs text-muted-foreground">
+                  Enter units per size. Sizes with 0 units are hidden from customers.
+                </p>
               </div>
             </LuxuryCard>
 
@@ -571,15 +604,6 @@ const AddProductPage = () => {
                 `Add Product (${localImages.length} image${localImages.length !== 1 ? "s" : ""})`
               )}
             </button>
-            {(!name || !price || localImages.length === 0) && !saving && (
-              <p className="text-xs text-muted-foreground text-center -mt-2">
-                {!name
-                  ? "Product name is required"
-                  : !price
-                  ? "Price is required"
-                  : "At least one image is required"}
-              </p>
-            )}
           </div>
         </motion.div>
       </main>
