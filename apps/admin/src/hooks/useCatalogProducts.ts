@@ -262,17 +262,15 @@ export const useProductDetail = (id: string | undefined) => {
     queryClient.invalidateQueries({ queryKey: ["catalog-products"] });
   };
 
-  const saveProductSizes = async (sizes: { size_label: string; stock: number }[]) => {
+  const saveProductSizes = async (sizeLabels: string[]) => {
     await supabase.from("product_sizes").delete().eq("product_id", id!);
-    if (sizes.length === 0) return;
-    const validSizes = sizes.filter((s) => s.stock > 0);
-    if (validSizes.length === 0) return;
+    if (sizeLabels.length === 0) return;
     const { error } = await supabase.from("product_sizes").insert(
-      validSizes.map((s) => ({
+      sizeLabels.map((label) => ({
         product_id: id!,
-        size_label: s.size_label,
-        stock: s.stock,
-        sort_order: SIZE_SORT[s.size_label] ?? 99,
+        size_label: label,
+        stock: 1, // availability flag — actual stock tracked on products.stock
+        sort_order: SIZE_SORT[label] ?? 99,
       }))
     );
     if (error) throw error;
@@ -309,7 +307,7 @@ export const useCreateProduct = () => {
       is_featured?: boolean;
       is_new?: boolean;
       is_customizable?: boolean;
-      sizes?: { size_label: string; stock: number }[];
+      sizes?: string[]; // size labels that are available (made-to-order model)
     }) => {
       const { data: product, error } = await supabase
         .from("products")
@@ -328,20 +326,17 @@ export const useCreateProduct = () => {
         .single();
       if (error) throw error;
 
-      // Save sizes after product creation
+      // Save available sizes after product creation
       if (data.sizes && data.sizes.length > 0) {
-        const validSizes = data.sizes.filter((s) => s.stock > 0);
-        if (validSizes.length > 0) {
-          const { error: sizeError } = await supabase.from("product_sizes").insert(
-            validSizes.map((s) => ({
-              product_id: product.id,
-              size_label: s.size_label,
-              stock: s.stock,
-              sort_order: SIZE_SORT[s.size_label] ?? 99,
-            }))
-          );
-          if (sizeError) throw sizeError;
-        }
+        const { error: sizeError } = await supabase.from("product_sizes").insert(
+          data.sizes.map((label) => ({
+            product_id: product.id,
+            size_label: label,
+            stock: 1, // availability flag
+            sort_order: SIZE_SORT[label] ?? 99,
+          }))
+        );
+        if (sizeError) throw sizeError;
       }
 
       return product;

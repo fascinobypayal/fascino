@@ -22,11 +22,6 @@ interface LocalCustomization {
   isFree: boolean;
 }
 
-interface LocalSize {
-  label: string;
-  stock: number;
-}
-
 const AddProductPage = () => {
   const navigate = useNavigate();
   const createProduct = useCreateProduct();
@@ -36,6 +31,8 @@ const AddProductPage = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState<number>(0);
+  const [stock, setStock] = useState<number>(0);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [category, setCategory] = useState("");
   const [published, setPublished] = useState(true);
   const [featured, setFeatured] = useState(false);
@@ -43,9 +40,6 @@ const AddProductPage = () => {
   const [customizationEnabled, setCustomizationEnabled] = useState(false);
   const [allowCustomNote, setAllowCustomNote] = useState(false);
   const [customizationOptions, setCustomizationOptions] = useState<LocalCustomization[]>([]);
-  const [sizes, setSizes] = useState<LocalSize[]>(
-    ALL_SIZES.map((label) => ({ label, stock: 0 }))
-  );
   const [saving, setSaving] = useState(false);
 
   const [localImages, setLocalImages] = useState<LocalImage[]>([]);
@@ -120,8 +114,8 @@ const AddProductPage = () => {
 
   const handleSubmit = async () => {
     if (!name || !price || localImages.length === 0) return;
-    if (!sizes.some((s) => s.stock > 0)) {
-      toast({ title: "Add at least one size with stock", variant: "destructive" });
+    if (selectedSizes.length === 0) {
+      toast({ title: "Select at least one available size", variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -129,18 +123,17 @@ const AddProductPage = () => {
     let productId: string | null = null;
 
     try {
-      const totalStock = sizes.reduce((sum, s) => sum + s.stock, 0);
       const product = await createProduct.mutateAsync({
         name,
         description,
         price,
-        stock: totalStock,
+        stock,
         category,
         is_published: published,
         is_featured: featured,
         is_new: newArrival,
         is_customizable: customizationEnabled,
-        sizes: sizes.filter((s) => s.stock > 0).map((s) => ({ size_label: s.label, stock: s.stock })),
+        sizes: selectedSizes,
       });
       productId = product.id;
 
@@ -344,14 +337,15 @@ const AddProductPage = () => {
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Total Stock
+                      Total Stock *
                     </label>
-                    <div className="luxury-input mt-2 flex items-center h-[42px]">
-                      <span className="text-sm text-foreground">
-                        {sizes.reduce((sum, s) => sum + s.stock, 0)}
-                      </span>
-                      <span className="text-xs text-muted-foreground ml-2">units</span>
-                    </div>
+                    <input
+                      type="number"
+                      value={stock || ""}
+                      onChange={(e) => setStock(Number(e.target.value) || 0)}
+                      className="luxury-input mt-2"
+                      placeholder="0"
+                    />
                   </div>
                 </div>
 
@@ -375,40 +369,35 @@ const AddProductPage = () => {
 
             {/* Sizes */}
             <LuxuryCard>
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
                 Available Sizes
               </h3>
-              <div className="space-y-3">
-                {sizes.map((size) => (
-                  <div key={size.label} className="flex items-center gap-3">
-                    <span className="w-12 text-sm font-medium text-foreground">{size.label}</span>
-                    <div className="flex items-center gap-2 flex-1">
-                      <input
-                        type="number"
-                        min="0"
-                        value={size.stock || ""}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value) || 0;
-                          setSizes((prev) =>
-                            prev.map((s) => (s.label === size.label ? { ...s, stock: val } : s))
-                          );
-                        }}
-                        className="luxury-input flex-1"
-                        placeholder="0"
-                      />
-                      <span className="text-xs text-muted-foreground">units</span>
-                    </div>
-                    {size.stock > 0 && (
-                      <span className="text-xs text-secondary font-medium">
-                        ✓
-                      </span>
-                    )}
-                  </div>
-                ))}
-                <p className="text-xs text-muted-foreground">
-                  Enter units per size. Sizes with 0 units are hidden from customers.
-                </p>
+              <div className="flex flex-wrap gap-2">
+                {ALL_SIZES.map((size) => {
+                  const active = selectedSizes.includes(size);
+                  return (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() =>
+                        setSelectedSizes((prev) =>
+                          active ? prev.filter((s) => s !== size) : [...prev, size]
+                        )
+                      }
+                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors min-h-[44px] min-w-[44px] ${
+                        active
+                          ? "bg-secondary text-secondary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  );
+                })}
               </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Select every size you can stitch for this product.
+              </p>
             </LuxuryCard>
 
             {/* Status & Visibility */}

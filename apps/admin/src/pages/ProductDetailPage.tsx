@@ -26,11 +26,6 @@ interface LocalCustomization {
   isFree: boolean;
 }
 
-interface LocalSize {
-  label: string;
-  stock: number;
-}
-
 const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -58,6 +53,7 @@ const ProductDetailPage = () => {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState(0);
   const [stock, setStock] = useState(0);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [category, setCategory] = useState("");
   const [published, setPublished] = useState(true);
   const [featured, setFeatured] = useState(false);
@@ -65,9 +61,6 @@ const ProductDetailPage = () => {
   const [customizationEnabled, setCustomizationEnabled] = useState(false);
   const [allowCustomNote, setAllowCustomNote] = useState(false);
   const [customizationOptions, setCustomizationOptions] = useState<LocalCustomization[]>([]);
-  const [sizes, setSizes] = useState<LocalSize[]>(
-    ALL_SIZES.map((label) => ({ label, stock: 0 }))
-  );
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -106,25 +99,19 @@ const ProductDetailPage = () => {
   }, [customizationSettings]);
 
   useEffect(() => {
-    if (productSizes && productSizes.length > 0) {
-      setSizes(
-        ALL_SIZES.map((label) => {
-          const existing = productSizes.find((ps) => ps.size_label === label);
-          return { label, stock: existing ? existing.stock ?? 0 : 0 };
-        })
-      );
+    if (productSizes) {
+      setSelectedSizes(productSizes.map((ps) => ps.size_label));
     }
   }, [productSizes]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const totalStock = sizes.reduce((sum, s) => sum + s.stock, 0);
       const updates = {
         name,
         description: description || null,
         price: Number(price),
-        stock: totalStock,
+        stock: Number(stock),
         category,
         is_published: published,
         is_featured: featured,
@@ -133,11 +120,7 @@ const ProductDetailPage = () => {
       };
       await updateProduct.mutateAsync(updates);
 
-      await saveProductSizes(
-        sizes
-          .filter((s) => s.stock > 0)
-          .map((s) => ({ size_label: s.label, stock: s.stock }))
-      );
+      await saveProductSizes(selectedSizes);
 
       if (customizationEnabled) {
         await saveCustomizations(
@@ -363,12 +346,13 @@ const ProductDetailPage = () => {
                     <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       Total Stock
                     </label>
-                    <div className="luxury-input mt-2 flex items-center h-[42px]">
-                      <span className="text-sm text-foreground">
-                        {sizes.reduce((sum, s) => sum + s.stock, 0)}
-                      </span>
-                      <span className="text-xs text-muted-foreground ml-2">units</span>
-                    </div>
+                    <input
+                      type="number"
+                      value={stock || ""}
+                      onChange={(e) => setStock(Number(e.target.value) || 0)}
+                      className="luxury-input mt-2"
+                      placeholder="0"
+                    />
                   </div>
                 </div>
 
@@ -392,38 +376,35 @@ const ProductDetailPage = () => {
 
             {/* Sizes */}
             <LuxuryCard>
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
                 Available Sizes
               </h3>
-              <div className="space-y-3">
-                {sizes.map((size) => (
-                  <div key={size.label} className="flex items-center gap-3">
-                    <span className="w-12 text-sm font-medium text-foreground">{size.label}</span>
-                    <div className="flex items-center gap-2 flex-1">
-                      <input
-                        type="number"
-                        min="0"
-                        value={size.stock || ""}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value) || 0;
-                          setSizes((prev) =>
-                            prev.map((s) => (s.label === size.label ? { ...s, stock: val } : s))
-                          );
-                        }}
-                        className="luxury-input flex-1"
-                        placeholder="0"
-                      />
-                      <span className="text-xs text-muted-foreground">units</span>
-                    </div>
-                    {size.stock > 0 && (
-                      <span className="text-xs text-secondary font-medium">✓</span>
-                    )}
-                  </div>
-                ))}
-                <p className="text-xs text-muted-foreground">
-                  Enter units per size. Sizes with 0 units are hidden from customers.
-                </p>
+              <div className="flex flex-wrap gap-2">
+                {ALL_SIZES.map((size) => {
+                  const active = selectedSizes.includes(size);
+                  return (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() =>
+                        setSelectedSizes((prev) =>
+                          active ? prev.filter((s) => s !== size) : [...prev, size]
+                        )
+                      }
+                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors min-h-[44px] min-w-[44px] ${
+                        active
+                          ? "bg-secondary text-secondary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  );
+                })}
               </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Select every size you can stitch for this product.
+              </p>
             </LuxuryCard>
 
             {/* Status & Flags */}
@@ -591,7 +572,7 @@ const ProductDetailPage = () => {
             <div className="space-y-3 pt-2">
               <button
                 onClick={handleSave}
-                disabled={saving || !name || !price || !sizes.some((s) => s.stock > 0)}
+                disabled={saving || !name || !price || selectedSizes.length === 0}
                 className="w-full luxury-button-primary min-h-[48px] disabled:opacity-50"
               >
                 {saving ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Save Changes"}
