@@ -53,6 +53,7 @@ const ProductDetailPage = () => {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState(0);
   const [stock, setStock] = useState(0);
+  const [sizeRequired, setSizeRequired] = useState(true);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [category, setCategory] = useState("");
   const [published, setPublished] = useState(true);
@@ -101,6 +102,7 @@ const ProductDetailPage = () => {
   useEffect(() => {
     if (productSizes) {
       setSelectedSizes(productSizes.map((ps) => ps.size_label));
+      setSizeRequired(productSizes.length > 0);
     }
   }, [productSizes]);
 
@@ -120,7 +122,7 @@ const ProductDetailPage = () => {
       };
       await updateProduct.mutateAsync(updates);
 
-      await saveProductSizes(selectedSizes);
+      await saveProductSizes(sizeRequired ? selectedSizes : []);
 
       if (customizationEnabled) {
         await saveCustomizations(
@@ -376,35 +378,58 @@ const ProductDetailPage = () => {
 
             {/* Sizes */}
             <LuxuryCard>
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                Available Sizes
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {ALL_SIZES.map((size) => {
-                  const active = selectedSizes.includes(size);
-                  return (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() =>
-                        setSelectedSizes((prev) =>
-                          active ? prev.filter((s) => s !== size) : [...prev, size]
-                        )
-                      }
-                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors min-h-[44px] min-w-[44px] ${
-                        active
-                          ? "bg-secondary text-secondary-foreground"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  );
-                })}
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Size Required
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setSizeRequired(!sizeRequired)}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${
+                    sizeRequired ? "bg-secondary" : "bg-muted"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 w-4 h-4 rounded-full bg-card shadow-sm transition-transform ${
+                      sizeRequired ? "left-6" : "left-1"
+                    }`}
+                  />
+                </button>
               </div>
-              <p className="text-xs text-muted-foreground mt-3">
-                Select every size you can stitch for this product.
-              </p>
+              {sizeRequired ? (
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    {ALL_SIZES.map((size) => {
+                      const active = selectedSizes.includes(size);
+                      return (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() =>
+                            setSelectedSizes((prev) =>
+                              active ? prev.filter((s) => s !== size) : [...prev, size]
+                            )
+                          }
+                          className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors min-h-[44px] min-w-[44px] ${
+                            active
+                              ? "bg-secondary text-secondary-foreground"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    Select every size you can stitch for this product.
+                  </p>
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  This product is sold without size options (e.g. accessories or one-size items).
+                </p>
+              )}
             </LuxuryCard>
 
             {/* Status & Flags */}
@@ -572,7 +597,7 @@ const ProductDetailPage = () => {
             <div className="space-y-3 pt-2">
               <button
                 onClick={handleSave}
-                disabled={saving || !name || !price || selectedSizes.length === 0}
+                disabled={saving || !name || !price || (sizeRequired && selectedSizes.length === 0)}
                 className="w-full luxury-button-primary min-h-[48px] disabled:opacity-50"
               >
                 {saving ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Save Changes"}

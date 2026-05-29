@@ -56,6 +56,7 @@ const ProductDetailPage = () => {
   }
 
   const hasCustomizations = customizations.length > 0;
+  const hasSizes = sizes.length > 0;
   const outOfStock = product.stock <= 0;
 
   const handleOpenCustomization = () => { hideNav(); setShowCustomization(true); };
@@ -80,11 +81,11 @@ const ProductDetailPage = () => {
     const selected = getSelectedCustomizationsList();
     if (selected.length > 0) parts.push(`custs:${selected.map(c => c.id).sort().join(',')}`);
     if (customNote.trim()) parts.push(`note:${customNote.trim().substring(0, 50)}`);
-    return parts.join('|') || `size:${selectedSize}`;
+    return parts.join('|') || 'default';
   };
 
   const handleAddToCart = async () => {
-    if (!selectedSize) {
+    if (hasSizes && !selectedSize) {
       toast({ title: 'Please select a size', description: 'Choose your size to add this item to cart' });
       return;
     }
@@ -96,13 +97,13 @@ const ProductDetailPage = () => {
     try {
       const signature = buildSignature();
       const custList: { name: string; price: number }[] = [
-        { name: `Size: ${selectedSize}`, price: 0 },
+        ...(selectedSize ? [{ name: `Size: ${selectedSize}`, price: 0 }] : []),
         ...getSelectedCustomizationsList().map(c => ({ name: c.name, price: c.is_paid ? c.price : 0 })),
       ];
       const firstImage = images.length > 0 ? images[0] : (product.image || null);
       await addToCart(product.id, product.price, signature, custList, customNote.trim() || undefined, { name: product.name, image: firstImage });
       setAddedToCart(true);
-      toast({ title: 'Added to cart', description: `${product.name} - Size ${selectedSize}` });
+      toast({ title: 'Added to cart', description: selectedSize ? `${product.name} - Size ${selectedSize}` : product.name });
     } catch {
       toast({ title: 'Error', description: 'Could not add to cart', variant: 'destructive' });
     } finally {
@@ -111,7 +112,7 @@ const ProductDetailPage = () => {
   };
 
   const handleBuyNow = async () => {
-    if (!selectedSize) {
+    if (hasSizes && !selectedSize) {
       toast({ title: 'Please select a size', description: 'Choose your size to proceed' });
       return;
     }
@@ -123,7 +124,7 @@ const ProductDetailPage = () => {
     try {
       const signature = buildSignature();
       const custList: { name: string; price: number }[] = [
-        { name: `Size: ${selectedSize}`, price: 0 },
+        ...(selectedSize ? [{ name: `Size: ${selectedSize}`, price: 0 }] : []),
         ...getSelectedCustomizationsList().map(c => ({ name: c.name, price: c.is_paid ? c.price : 0 })),
       ];
       const firstImage = images.length > 0 ? images[0] : (product.image || null);
@@ -207,9 +208,11 @@ const ProductDetailPage = () => {
         <p className="text-lg font-medium mt-2">{formatPrice(product.price)}</p>
         {outOfStock && <p className="text-sm text-destructive mt-1">Out of Stock</p>}
 
-        <div className="mt-6">
-          <SizeSelector sizes={sizes} selectedSize={selectedSize} onSelectSize={setSelectedSize} />
-        </div>
+        {hasSizes && (
+          <div className="mt-6">
+            <SizeSelector sizes={sizes} selectedSize={selectedSize} onSelectSize={setSelectedSize} />
+          </div>
+        )}
 
         {hasCustomizations && (
           <button onClick={handleOpenCustomization} className="w-full mt-6 flex items-center justify-between p-4 border border-border hover:border-foreground/30 transition-colors">

@@ -43,8 +43,8 @@ export interface ProductSize {
   sort_order: number | null;
 }
 
-const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
-const SIZE_SORT: Record<string, number> = { XS: 0, S: 1, M: 2, L: 3, XL: 4, XXL: 5 };
+const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+const SIZE_SORT: Record<string, number> = { XS: 0, S: 1, M: 2, L: 3, XL: 4, XXL: 5, XXXL: 6 };
 
 export { ALL_SIZES, SIZE_SORT };
 

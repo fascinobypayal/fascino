@@ -32,6 +32,7 @@ const AddProductPage = () => {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState<number>(0);
   const [stock, setStock] = useState<number>(0);
+  const [sizeRequired, setSizeRequired] = useState(true);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [category, setCategory] = useState("");
   const [published, setPublished] = useState(true);
@@ -114,7 +115,7 @@ const AddProductPage = () => {
 
   const handleSubmit = async () => {
     if (!name || !price || localImages.length === 0) return;
-    if (selectedSizes.length === 0) {
+    if (sizeRequired && selectedSizes.length === 0) {
       toast({ title: "Select at least one available size", variant: "destructive" });
       return;
     }
@@ -133,7 +134,7 @@ const AddProductPage = () => {
         is_featured: featured,
         is_new: newArrival,
         is_customizable: customizationEnabled,
-        sizes: selectedSizes,
+        sizes: sizeRequired ? selectedSizes : [],
       });
       productId = product.id;
 
@@ -369,35 +370,58 @@ const AddProductPage = () => {
 
             {/* Sizes */}
             <LuxuryCard>
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                Available Sizes
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {ALL_SIZES.map((size) => {
-                  const active = selectedSizes.includes(size);
-                  return (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() =>
-                        setSelectedSizes((prev) =>
-                          active ? prev.filter((s) => s !== size) : [...prev, size]
-                        )
-                      }
-                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors min-h-[44px] min-w-[44px] ${
-                        active
-                          ? "bg-secondary text-secondary-foreground"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  );
-                })}
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Size Required
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setSizeRequired(!sizeRequired)}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${
+                    sizeRequired ? "bg-secondary" : "bg-muted"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 w-4 h-4 rounded-full bg-card shadow-sm transition-transform ${
+                      sizeRequired ? "left-6" : "left-1"
+                    }`}
+                  />
+                </button>
               </div>
-              <p className="text-xs text-muted-foreground mt-3">
-                Select every size you can stitch for this product.
-              </p>
+              {sizeRequired ? (
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    {ALL_SIZES.map((size) => {
+                      const active = selectedSizes.includes(size);
+                      return (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() =>
+                            setSelectedSizes((prev) =>
+                              active ? prev.filter((s) => s !== size) : [...prev, size]
+                            )
+                          }
+                          className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors min-h-[44px] min-w-[44px] ${
+                            active
+                              ? "bg-secondary text-secondary-foreground"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    Select every size you can stitch for this product.
+                  </p>
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  This product is sold without size options (e.g. accessories or one-size items).
+                </p>
+              )}
             </LuxuryCard>
 
             {/* Status & Visibility */}
