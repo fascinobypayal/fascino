@@ -76,7 +76,7 @@ const ProductCard = ({
               {product.is_new && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent text-[10px] text-muted-foreground">
                   <Sparkles className="w-2.5 h-2.5" />
-                  New
+                  Best Seller
                 </span>
               )}
               {product.is_customizable && (

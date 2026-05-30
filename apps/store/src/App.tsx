@@ -29,7 +29,7 @@ import OrderSuccessPage from "@/pages/OrderSuccessPage";
 import LoginPage from "@/pages/LoginPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import CollectionPage from "@/pages/CollectionPage";
-import NewArrivalsPage from "@/pages/NewArrivalsPage";
+import BestSellersPage from "@/pages/BestSellersPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,7 +53,8 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/shop" element={<ShopPage />} />
-      <Route path="/new-arrivals" element={<NewArrivalsPage />} />
+      <Route path="/best-sellers" element={<BestSellersPage />} />
+      <Route path="/new-arrivals" element={<BestSellersPage />} />
       <Route path="/collection/:id" element={<CollectionPage />} />
       <Route path="/product/:id" element={<ProductDetailPage />} />
       <Route path="/cart" element={<CartPage />} />

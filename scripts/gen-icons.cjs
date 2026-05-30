@@ -66,6 +66,11 @@ async function main() {
   await png(iconSvg(192), 192, path.join(admin, "pwa-192x192.png"));
   await png(iconSvg(180, true), 180, path.join(admin, "apple-touch-icon.png"));
 
+  // Store icons (for web manifest + apple touch icon + social share)
+  await png(iconSvg(512), 512, path.join(store, "pwa-512x512.png"));
+  await png(iconSvg(192), 192, path.join(store, "pwa-192x192.png"));
+  await png(iconSvg(180, true), 180, path.join(store, "apple-touch-icon.png"));
+
   // OG images
   await sharp(ogSvg()).png().toFile(path.join(store, "og-image.png"));
   console.log("wrote", path.join(store, "og-image.png"));

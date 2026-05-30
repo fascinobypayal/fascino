@@ -224,7 +224,7 @@ const HomePage = () => {
                   {([
                     { value: "collection", label: "Collection" },
                     { value: "product", label: "Product" },
-                    { value: "new_arrivals", label: "New Arrivals" },
+                    { value: "best_seller", label: "Best Seller" },
                   ] as const).map((opt) => (
                     <button
                       key={opt.value}
@@ -239,14 +239,14 @@ const HomePage = () => {
                     </button>
                   ))}
                 </div>
-                {config?.hero_link_type === "new_arrivals" && (
+                {config?.hero_link_type === "best_seller" && (
                   <p className="text-xs text-muted-foreground mt-2">
-                    The CTA will open the New Arrivals page (all products marked “New Arrival”).
+                    The CTA will open the Best Sellers page (all products marked “Best Seller”).
                   </p>
                 )}
               </div>
 
-              {config?.hero_link_type && config.hero_link_type !== "new_arrivals" && (
+              {config?.hero_link_type && config.hero_link_type !== "best_seller" && (
                 <div>
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Select {config.hero_link_type}

@@ -155,8 +155,8 @@ export const useHomeConfig = () => {
       toast({ title: "Link type is required", variant: "destructive" });
       return;
     }
-    // "new_arrivals" links to a fixed page and needs no target id
-    if (config.hero_link_type !== "new_arrivals" && !config.hero_link_id) {
+    // "best_seller" links to a fixed page and needs no target id
+    if (config.hero_link_type !== "best_seller" && !config.hero_link_id) {
       toast({ title: "Please select a target", variant: "destructive" });
       return;
     }
