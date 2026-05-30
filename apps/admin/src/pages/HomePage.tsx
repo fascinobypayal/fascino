@@ -220,24 +220,33 @@ const HomePage = () => {
                 <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Hero Link Type
                 </label>
-                <div className="flex gap-2 mt-2">
-                  {(["collection", "product"] as const).map((type) => (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {([
+                    { value: "collection", label: "Collection" },
+                    { value: "product", label: "Product" },
+                    { value: "new_arrivals", label: "New Arrivals" },
+                  ] as const).map((opt) => (
                     <button
-                      key={type}
-                      onClick={() => updateField("hero_link_type", type)}
-                      className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-all min-h-[44px] capitalize ${
-                        config?.hero_link_type === type
+                      key={opt.value}
+                      onClick={() => updateField("hero_link_type", opt.value)}
+                      className={`flex-1 min-w-[90px] py-2.5 px-4 rounded-xl text-sm font-medium transition-all min-h-[44px] ${
+                        config?.hero_link_type === opt.value
                           ? "bg-secondary text-secondary-foreground"
                           : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      {type}
+                      {opt.label}
                     </button>
                   ))}
                 </div>
+                {config?.hero_link_type === "new_arrivals" && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    The CTA will open the New Arrivals page (all products marked “New Arrival”).
+                  </p>
+                )}
               </div>
 
-              {config?.hero_link_type && (
+              {config?.hero_link_type && config.hero_link_type !== "new_arrivals" && (
                 <div>
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Select {config.hero_link_type}

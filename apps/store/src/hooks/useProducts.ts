@@ -1,6 +1,23 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+const isVideoUrl = (url: string) => /\.(mp4|webm|mov|m4v|ogg)$/i.test((url || '').split('?')[0]);
+
+// Pick the first non-video image as the card thumbnail; fall back to first media only if video-only
+const buildThumbnailMap = (images: { product_id: string | null; image_url: string }[] | null) => {
+  const thumb: Record<string, string> = {};
+  const fallback: Record<string, string> = {};
+  for (const img of images || []) {
+    if (!img.product_id) continue;
+    if (!fallback[img.product_id]) fallback[img.product_id] = img.image_url;
+    if (!thumb[img.product_id] && !isVideoUrl(img.image_url)) thumb[img.product_id] = img.image_url;
+  }
+  for (const pid of Object.keys(fallback)) {
+    if (!thumb[pid]) thumb[pid] = fallback[pid];
+  }
+  return thumb;
+};
+
 export interface DbProduct {
   id: string;
   name: string;
@@ -46,13 +63,7 @@ export function useProducts() {
           .select('product_id, image_url')
           .in('product_id', ids)
           .order('sort_order', { ascending: true });
-        if (images) {
-          for (const img of images) {
-            if (img.product_id && !imageMap[img.product_id]) {
-              imageMap[img.product_id] = img.image_url;
-            }
-          }
-        }
+        imageMap = buildThumbnailMap(images);
       }
 
       setProducts((data || []).map(p => ({
@@ -222,7 +233,7 @@ export function useProductDetail(productId: string | undefined) {
         is_new: p.is_new ?? false,
         show_on_home: p.show_on_home ?? true,
         description: p.description,
-        image: imgs?.[0]?.image_url || null,
+        image: (imgs || []).find(i => !isVideoUrl(i.image_url))?.image_url || imgs?.[0]?.image_url || null,
       });
       setImages((imgs || []).map(i => i.image_url));
       setCustomizations((custs || []).map(c => ({

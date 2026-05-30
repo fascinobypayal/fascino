@@ -15,6 +15,7 @@ const HomePage = () => {
   const ctaText = heroConfig?.hero_cta_text || 'Explore Collection';
 
   const getCtaLink = (): string | null => {
+    if (heroConfig?.hero_link_type === 'new_arrivals') return '/new-arrivals';
     if (!heroConfig?.hero_link_type || !heroConfig?.hero_link_id) return null;
     if (heroConfig.hero_link_type === 'product') return `/product/${heroConfig.hero_link_id}`;
     if (heroConfig.hero_link_type === 'collection') return `/collection/${heroConfig.hero_link_id}`;

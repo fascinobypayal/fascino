@@ -44,9 +44,11 @@ const ProductDetailPage = () => {
     saveProductSizes,
     uploadImage,
     deleteImage,
+    setImageFirst,
   } = useProductDetail(id);
 
   const { categoryNames } = useCategories();
+  const isVideo = (url: string) => /\.(mp4|webm|mov|m4v|ogg)$/i.test((url || "").split("?")[0]);
 
   const [activeImage, setActiveImage] = useState(0);
   const [name, setName] = useState("");
@@ -168,6 +170,16 @@ const ProductDetailPage = () => {
     }
   };
 
+  const handleSetFirst = async (imageId: string) => {
+    try {
+      setActiveImage(0);
+      await setImageFirst(imageId);
+      toast({ title: "Set as first media" });
+    } catch (err: any) {
+      toast({ title: "Error reordering media", description: err.message, variant: "destructive" });
+    }
+  };
+
   const addCustomizationOption = () => {
     setCustomizationOptions([
       ...customizationOptions,
@@ -224,7 +236,7 @@ const ProductDetailPage = () => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         className="hidden"
         onChange={handleImageUpload}
       />
@@ -241,14 +253,26 @@ const ProductDetailPage = () => {
           <div className="relative">
             <div className="aspect-[4/3] overflow-hidden bg-muted">
               {images.length > 0 ? (
-                <img
-                  src={images[activeImage]?.image_url}
-                  alt={name}
-                  className="w-full h-full object-cover"
-                />
+                isVideo(images[activeImage]?.image_url) ? (
+                  <video
+                    key={images[activeImage]?.image_url}
+                    src={images[activeImage]?.image_url}
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                  />
+                ) : (
+                  <img
+                    src={images[activeImage]?.image_url}
+                    alt={name}
+                    className="w-full h-full object-cover"
+                  />
+                )
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  No images
+                  No media
                 </div>
               )}
             </div>
@@ -271,19 +295,49 @@ const ProductDetailPage = () => {
           <div className="px-4 space-y-4">
             {/* Image Management */}
             <LuxuryCard>
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                Images ({images.length})
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                Media ({images.length})
               </h3>
+              <p className="text-[11px] text-muted-foreground mb-3">
+                Photos & videos. The first item shows first on the storefront — tap “Set first” to reorder. Videos loop automatically.
+              </p>
               <div className="grid grid-cols-4 gap-2">
-                {images.map((img) => (
-                  <div key={img.id} className="relative aspect-square rounded-lg overflow-hidden">
-                    <img src={img.image_url} alt="" className="w-full h-full object-cover" />
+                {images.map((img, idx) => (
+                  <div
+                    key={img.id}
+                    className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer ${
+                      activeImage === idx ? "ring-2 ring-secondary" : ""
+                    }`}
+                    onClick={() => setActiveImage(idx)}
+                  >
+                    {isVideo(img.image_url) ? (
+                      <video src={img.image_url} className="w-full h-full object-cover" muted playsInline />
+                    ) : (
+                      <img src={img.image_url} alt="" className="w-full h-full object-cover" />
+                    )}
                     <button
-                      onClick={() => handleDeleteImage(img.id, img.image_url)}
+                      onClick={(e) => { e.stopPropagation(); handleDeleteImage(img.id, img.image_url); }}
                       className="absolute top-1 right-1 w-5 h-5 rounded-full bg-foreground/80 text-background flex items-center justify-center"
                     >
                       <X className="w-3 h-3" />
                     </button>
+                    {isVideo(img.image_url) && (
+                      <span className="absolute top-1 left-1 text-[8px] bg-foreground/70 text-background px-1 py-0.5 rounded-full font-medium">
+                        Video
+                      </span>
+                    )}
+                    {idx === 0 ? (
+                      <span className="absolute bottom-1 left-1 text-[8px] bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded-full font-medium">
+                        First
+                      </span>
+                    ) : (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleSetFirst(img.id); }}
+                        className="absolute bottom-1 left-1 text-[8px] bg-background/80 text-foreground px-1.5 py-0.5 rounded-full font-medium hover:bg-background"
+                      >
+                        Set first
+                      </button>
+                    )}
                   </div>
                 ))}
                 {images.length < 5 && (

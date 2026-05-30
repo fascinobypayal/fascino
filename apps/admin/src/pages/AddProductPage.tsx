@@ -46,12 +46,22 @@ const AddProductPage = () => {
   const [localImages, setLocalImages] = useState<LocalImage[]>([]);
   const [activeImage, setActiveImage] = useState(0);
 
+  const isVideoFile = (file: File) => file.type.startsWith("video/");
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
     const remaining = 5 - localImages.length;
-    const newFiles = Array.from(files).slice(0, remaining);
+    const MAX_BYTES = 50 * 1024 * 1024; // 50MB
+    const picked = Array.from(files).slice(0, remaining);
+    const newFiles = picked.filter((file) => {
+      if (file.size > MAX_BYTES) {
+        toast({ title: "File too large", description: `${file.name} exceeds the 50MB limit.`, variant: "destructive" });
+        return false;
+      }
+      return true;
+    });
 
     const newLocalImages: LocalImage[] = newFiles.map((file) => ({
       id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -61,6 +71,16 @@ const AddProductPage = () => {
 
     setLocalImages((prev) => [...prev, ...newLocalImages]);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const makePrimary = (imageId: string) => {
+    setLocalImages((prev) => {
+      const idx = prev.findIndex((i) => i.id === imageId);
+      if (idx <= 0) return prev;
+      const reordered = [prev[idx], ...prev.filter((i) => i.id !== imageId)];
+      return reordered;
+    });
+    setActiveImage(0);
   };
 
   const removeLocalImage = (imageId: string) => {
@@ -202,7 +222,7 @@ const AddProductPage = () => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         multiple
         className="hidden"
         onChange={handleFileSelect}
@@ -220,19 +240,31 @@ const AddProductPage = () => {
           <div className="relative">
             <div className="aspect-[4/3] overflow-hidden bg-muted">
               {localImages.length > 0 ? (
-                <img
-                  src={localImages[activeImage]?.previewUrl}
-                  alt={name || "Product preview"}
-                  className="w-full h-full object-cover"
-                />
+                isVideoFile(localImages[activeImage].file) ? (
+                  <video
+                    key={localImages[activeImage].id}
+                    src={localImages[activeImage].previewUrl}
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                  />
+                ) : (
+                  <img
+                    src={localImages[activeImage]?.previewUrl}
+                    alt={name || "Product preview"}
+                    className="w-full h-full object-cover"
+                  />
+                )
               ) : (
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-2"
                 >
                   <Upload className="w-8 h-8" />
-                  <span className="text-sm font-medium">Tap to add images</span>
-                  <span className="text-xs">At least 1 image required</span>
+                  <span className="text-sm font-medium">Tap to add photos or video</span>
+                  <span className="text-xs">At least 1 photo or video required</span>
                 </button>
               )}
             </div>
@@ -255,30 +287,48 @@ const AddProductPage = () => {
           <div className="px-4 space-y-4">
             {/* Image Management */}
             <LuxuryCard>
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                Images ({localImages.length})
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                Media ({localImages.length})
               </h3>
+              <p className="text-[11px] text-muted-foreground mb-3">
+                Photos & video (max 50MB each). The primary item shows first on the storefront — tap “Set first” to change it.
+              </p>
               <div className="grid grid-cols-4 gap-2">
                 {localImages.map((img, idx) => (
-                  <div key={img.id} className="relative aspect-square rounded-lg overflow-hidden">
-                    <img
-                      src={img.previewUrl}
-                      alt=""
-                      className={`w-full h-full object-cover cursor-pointer ${
-                        activeImage === idx ? "ring-2 ring-secondary" : ""
-                      }`}
-                      onClick={() => setActiveImage(idx)}
-                    />
+                  <div
+                    key={img.id}
+                    className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer ${
+                      activeImage === idx ? "ring-2 ring-secondary" : ""
+                    }`}
+                    onClick={() => setActiveImage(idx)}
+                  >
+                    {isVideoFile(img.file) ? (
+                      <video src={img.previewUrl} className="w-full h-full object-cover" muted playsInline />
+                    ) : (
+                      <img src={img.previewUrl} alt="" className="w-full h-full object-cover" />
+                    )}
                     <button
-                      onClick={() => removeLocalImage(img.id)}
+                      onClick={(e) => { e.stopPropagation(); removeLocalImage(img.id); }}
                       className="absolute top-1 right-1 w-5 h-5 rounded-full bg-foreground/80 text-background flex items-center justify-center"
                     >
                       <X className="w-3 h-3" />
                     </button>
-                    {idx === 0 && (
-                      <span className="absolute bottom-1 left-1 text-[8px] bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded-full font-medium">
-                        Primary
+                    {isVideoFile(img.file) && (
+                      <span className="absolute top-1 left-1 text-[8px] bg-foreground/70 text-background px-1 py-0.5 rounded-full font-medium">
+                        Video
                       </span>
+                    )}
+                    {idx === 0 ? (
+                      <span className="absolute bottom-1 left-1 text-[8px] bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded-full font-medium">
+                        First
+                      </span>
+                    ) : (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); makePrimary(img.id); }}
+                        className="absolute bottom-1 left-1 text-[8px] bg-background/80 text-foreground px-1.5 py-0.5 rounded-full font-medium hover:bg-background"
+                      >
+                        Set first
+                      </button>
                     )}
                   </div>
                 ))}

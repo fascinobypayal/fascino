@@ -42,7 +42,7 @@ const CollectionPage = () => {
           .eq('is_published', true)
           .in('id', productIds);
 
-        // Fetch images
+        // Fetch images — prefer first non-video as the card thumbnail
         let imageMap: Record<string, string> = {};
         if (prods && prods.length > 0) {
           const ids = prods.map(p => p.id);
@@ -52,10 +52,15 @@ const CollectionPage = () => {
             .in('product_id', ids)
             .order('sort_order', { ascending: true });
           if (images) {
+            const isVid = (u: string) => /\.(mp4|webm|mov|m4v|ogg)$/i.test((u || '').split('?')[0]);
+            const fallback: Record<string, string> = {};
             for (const img of images) {
-              if (img.product_id && !imageMap[img.product_id]) {
-                imageMap[img.product_id] = img.image_url;
-              }
+              if (!img.product_id) continue;
+              if (!fallback[img.product_id]) fallback[img.product_id] = img.image_url;
+              if (!imageMap[img.product_id] && !isVid(img.image_url)) imageMap[img.product_id] = img.image_url;
+            }
+            for (const pid of Object.keys(fallback)) {
+              if (!imageMap[pid]) imageMap[pid] = fallback[pid];
             }
           }
         }
@@ -91,7 +96,7 @@ const CollectionPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen pb-20">
-        <PageHeader title="Collection" />
+        <PageHeader title="Collection" showBack />
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
       </div>
     );
@@ -100,7 +105,7 @@ const CollectionPage = () => {
   if (!collection) {
     return (
       <div className="min-h-screen pb-20">
-        <PageHeader title="Collection" />
+        <PageHeader title="Collection" showBack />
         <div className="text-center py-16"><p className="text-sm text-muted-foreground">Collection not found</p></div>
       </div>
     );
@@ -108,7 +113,7 @@ const CollectionPage = () => {
 
   return (
     <div className="min-h-screen pb-20">
-      <PageHeader title={collection.name} />
+      <PageHeader title={collection.name} showBack />
 
       {/* Collection Hero */}
       {collection.image_url && (

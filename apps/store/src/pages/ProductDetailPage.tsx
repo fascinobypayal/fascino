@@ -59,6 +59,10 @@ const ProductDetailPage = () => {
   const hasSizes = sizes.length > 0;
   const outOfStock = product.stock <= 0;
 
+  const isVideo = (url: string) => /\.(mp4|webm|mov|m4v|ogg)$/i.test((url || '').split('?')[0]);
+  // Cart/thumbnail previews must be a still image, never a video
+  const thumbnailImage = images.find((u) => !isVideo(u)) || (product.image && !isVideo(product.image) ? product.image : null);
+
   const handleOpenCustomization = () => { hideNav(); setShowCustomization(true); };
   const handleCloseCustomization = () => { showNav(); setShowCustomization(false); };
 
@@ -100,7 +104,7 @@ const ProductDetailPage = () => {
         ...(selectedSize ? [{ name: `Size: ${selectedSize}`, price: 0 }] : []),
         ...getSelectedCustomizationsList().map(c => ({ name: c.name, price: c.is_paid ? c.price : 0 })),
       ];
-      const firstImage = images.length > 0 ? images[0] : (product.image || null);
+      const firstImage = thumbnailImage;
       await addToCart(product.id, product.price, signature, custList, customNote.trim() || undefined, { name: product.name, image: firstImage });
       setAddedToCart(true);
       toast({ title: 'Added to cart', description: selectedSize ? `${product.name} - Size ${selectedSize}` : product.name });
@@ -127,7 +131,7 @@ const ProductDetailPage = () => {
         ...(selectedSize ? [{ name: `Size: ${selectedSize}`, price: 0 }] : []),
         ...getSelectedCustomizationsList().map(c => ({ name: c.name, price: c.is_paid ? c.price : 0 })),
       ];
-      const firstImage = images.length > 0 ? images[0] : (product.image || null);
+      const firstImage = thumbnailImage;
       await addToCart(product.id, product.price, signature, custList, customNote.trim() || undefined, { name: product.name, image: firstImage });
       navigate('/cart');
     } catch {

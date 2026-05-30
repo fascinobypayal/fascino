@@ -6,6 +6,8 @@ interface ImageCarouselProps {
   alt: string;
 }
 
+const isVideo = (url: string) => /\.(mp4|webm|mov|m4v|ogg)$/i.test((url || '').split('?')[0]);
+
 export const ImageCarousel = ({ images, alt }: ImageCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -17,14 +19,28 @@ export const ImageCarousel = ({ images, alt }: ImageCarouselProps) => {
     setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   };
 
+  const current = images[currentIndex];
+
   return (
     <div className="relative w-full">
       <div className="aspect-[3/4] overflow-hidden bg-primary">
-        <img
-          src={images[currentIndex]}
-          alt={`${alt} - Image ${currentIndex + 1}`}
-          className="h-full w-full object-cover transition-opacity duration-500"
-        />
+        {isVideo(current) ? (
+          <video
+            key={current}
+            src={current}
+            className="h-full w-full object-cover"
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
+        ) : (
+          <img
+            src={current}
+            alt={`${alt} - Image ${currentIndex + 1}`}
+            className="h-full w-full object-cover transition-opacity duration-500"
+          />
+        )}
       </div>
 
       {images.length > 1 && (

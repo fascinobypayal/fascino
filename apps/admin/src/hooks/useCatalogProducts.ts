@@ -224,8 +224,12 @@ export const useProductDetail = (id: string | undefined) => {
     queryClient.invalidateQueries({ queryKey: ["product-customization-settings", id] });
   };
 
-  // Image management
+  // Image / video management
+  const MAX_UPLOAD_BYTES = 50 * 1024 * 1024; // 50MB — covers short looping product videos
   const uploadImage = async (file: File) => {
+    if (file.size > MAX_UPLOAD_BYTES) {
+      throw new Error("File too large. Max size is 50MB.");
+    }
     const ext = file.name.split(".").pop();
     const path = `${id}/${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage
@@ -262,6 +266,21 @@ export const useProductDetail = (id: string | undefined) => {
     queryClient.invalidateQueries({ queryKey: ["catalog-products"] });
   };
 
+  // Move a media item (image or video) to the front so it shows first on the storefront
+  const setImageFirst = async (imageId: string) => {
+    const ordered = [
+      imageId,
+      ...images.filter((img) => img.id !== imageId).map((img) => img.id),
+    ];
+    await Promise.all(
+      ordered.map((imgId, index) =>
+        supabase.from("product_images").update({ sort_order: index }).eq("id", imgId)
+      )
+    );
+    queryClient.invalidateQueries({ queryKey: ["product-images", id] });
+    queryClient.invalidateQueries({ queryKey: ["catalog-products"] });
+  };
+
   const saveProductSizes = async (sizeLabels: string[]) => {
     await supabase.from("product_sizes").delete().eq("product_id", id!);
     if (sizeLabels.length === 0) return;
@@ -290,6 +309,7 @@ export const useProductDetail = (id: string | undefined) => {
     saveProductSizes,
     uploadImage,
     deleteImage,
+    setImageFirst,
   };
 };
 
